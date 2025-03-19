@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  db6:
+    image: postgres:latest
+    container_name: user_container
+    environment:
+      POSTGRES_USER: user6
+      POSTGRES_PASSWORD: password6
+      POSTGRES_DB: db6
+    ports:
+      - "5437:5432"
+    volumes:
+      - db6-data:/var/lib/postgresql/data
+
+volumes:
+  db6-data:
