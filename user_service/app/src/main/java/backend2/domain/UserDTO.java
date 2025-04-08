@@ -7,6 +7,7 @@ import java.util.Set;
 @Builder
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class UserDTO {
     private Integer id;
     private String username;
