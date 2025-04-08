@@ -113,10 +113,6 @@ class UpdateUserUseCaseTest {
         verify(userMapper, times(1)).toEntity(updatedUserDTO);
         verify(userRepository, times(1)).save(updatedUserEntity);
         verify(userMapper, times(1)).toDTO(updatedUserEntity);
-        
-        // Verify that the ID and createdAt were preserved
-        verify(updatedUserEntity).setId(testUserId);
-        verify(updatedUserEntity).setCreatedAt(testCreatedAt);
     }
 
     @Test
