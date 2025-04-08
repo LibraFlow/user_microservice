@@ -12,7 +12,7 @@ class UserDTOTest {
     void testUserDTOBuilder() {
         // Arrange & Act
         Set<Role> roles = new HashSet<>();
-        roles.add(Role.USER);
+        roles.add(Role.CUSTOMER);
         
         UserDTO userDTO = UserDTO.builder()
                 .id(1)
@@ -39,7 +39,7 @@ class UserDTOTest {
     void testUserDTOAllArgsConstructor() {
         // Arrange & Act
         Set<Role> roles = new HashSet<>();
-        roles.add(Role.USER);
+        roles.add(Role.LIBRARIAN);
         
         UserDTO userDTO = new UserDTO(1, "testuser", "password123".toCharArray(), 
                 "test@example.com", "123 Test St", "123-456-7890", roles);
@@ -59,14 +59,14 @@ class UserDTOTest {
     void testUserDTOEqualsAndHashCode() {
         // Arrange
         Set<Role> roles1 = new HashSet<>();
-        roles1.add(Role.USER);
+        roles1.add(Role.CUSTOMER);
         
         Set<Role> roles2 = new HashSet<>();
-        roles2.add(Role.USER);
+        roles2.add(Role.CUSTOMER);
         
         Set<Role> roles3 = new HashSet<>();
-        roles3.add(Role.ADMIN);
-        
+        roles3.add(Role.ADMINISTRATOR);
+
         UserDTO userDTO1 = UserDTO.builder()
                 .id(1)
                 .username("testuser")
@@ -108,7 +108,7 @@ class UserDTOTest {
     void testUserDTOToString() {
         // Arrange
         Set<Role> roles = new HashSet<>();
-        roles.add(Role.USER);
+        roles.add(Role.CUSTOMER);
         
         UserDTO userDTO = UserDTO.builder()
                 .id(1)
@@ -131,5 +131,31 @@ class UserDTOTest {
         assertTrue(toString.contains("address=123 Test St"));
         assertTrue(toString.contains("phone=123-456-7890"));
         assertTrue(toString.contains("roles="));
+    }
+    
+    @Test
+    void testUserDTOSettersAndGetters() {
+        // Arrange
+        UserDTO userDTO = new UserDTO();
+        Set<Role> roles = new HashSet<>();
+        roles.add(Role.ADMINISTRATOR);
+        
+        // Act
+        userDTO.setId(1);
+        userDTO.setUsername("testuser");
+        userDTO.setPwd("password123".toCharArray());
+        userDTO.setEmail("test@example.com");
+        userDTO.setAddress("123 Test St");
+        userDTO.setPhone("123-456-7890");
+        userDTO.setRoles(roles);
+        
+        // Assert
+        assertEquals(1, userDTO.getId());
+        assertEquals("testuser", userDTO.getUsername());
+        assertArrayEquals("password123".toCharArray(), userDTO.getPwd());
+        assertEquals("test@example.com", userDTO.getEmail());
+        assertEquals("123 Test St", userDTO.getAddress());
+        assertEquals("123-456-7890", userDTO.getPhone());
+        assertEquals(roles, userDTO.getRoles());
     }
 } 
