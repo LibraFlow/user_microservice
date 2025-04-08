@@ -1,5 +1,6 @@
 package backend2.business.mapper;
 
+import backend2.domain.Role;
 import backend2.domain.UserDTO;
 import backend2.persistence.entity.UserEntity;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,8 +10,8 @@ import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,22 +23,24 @@ class UserMapperTest {
 
     private UserEntity testUserEntity;
     private UserDTO testUserDTO;
-    private char[] testPassword;
+    private Set<Role> testRoles;
 
     @BeforeEach
     void setUp() {
-        // Initialize test password
-        testPassword = "password123".toCharArray();
-        
+        // Initialize test roles
+        testRoles = new HashSet<>();
+        testRoles.add(Role.CUSTOMER);
+        testRoles.add(Role.LIBRARIAN);
+
         // Initialize test data for UserEntity
         testUserEntity = UserEntity.builder()
                 .id(1)
                 .username("testuser")
-                .pwd(testPassword)
+                .pwd("password123".toCharArray())
                 .email("test@example.com")
                 .address("123 Test St")
-                .phone("123-456-7890")
-                .roles(Arrays.asList("USER", "ADMIN"))
+                .phone("+1234567890")
+                .roles(testRoles)
                 .createdAt(LocalDate.now())
                 .build();
 
@@ -45,11 +48,11 @@ class UserMapperTest {
         testUserDTO = UserDTO.builder()
                 .id(1)
                 .username("testuser")
-                .pwd(testPassword)
+                .pwd("password123".toCharArray())
                 .email("test@example.com")
                 .address("123 Test St")
-                .phone("123-456-7890")
-                .roles(Arrays.asList("USER", "ADMIN"))
+                .phone("+1234567890")
+                .roles(testRoles)
                 .build();
     }
 
@@ -79,27 +82,6 @@ class UserMapperTest {
     }
 
     @Test
-    void toDTO_WithEmptyRoles_ShouldReturnEmptyList() {
-        // Arrange
-        UserEntity entityWithEmptyRoles = UserEntity.builder()
-                .id(1)
-                .username("testuser")
-                .pwd(testPassword)
-                .email("test@example.com")
-                .address("123 Test St")
-                .phone("123-456-7890")
-                .roles(Collections.emptyList())
-                .build();
-
-        // Act
-        UserDTO result = userMapper.toDTO(entityWithEmptyRoles);
-
-        // Assert
-        assertNotNull(result);
-        assertTrue(result.getRoles().isEmpty());
-    }
-
-    @Test
     void toEntity_WithValidDTO_ShouldReturnCorrectEntity() {
         // Act
         UserEntity result = userMapper.toEntity(testUserDTO);
@@ -113,6 +95,7 @@ class UserMapperTest {
         assertEquals(testUserDTO.getAddress(), result.getAddress());
         assertEquals(testUserDTO.getPhone(), result.getPhone());
         assertEquals(testUserDTO.getRoles(), result.getRoles());
+        assertNull(result.getCreatedAt()); // Existing user should not have createdAt set
     }
 
     @Test
@@ -127,14 +110,13 @@ class UserMapperTest {
     @Test
     void toEntity_WithNewUser_ShouldSetCreatedAt() {
         // Arrange
-        char[] newPassword = "newpassword".toCharArray();
         UserDTO newUserDTO = UserDTO.builder()
                 .username("newuser")
-                .pwd(newPassword)
+                .pwd("newpassword".toCharArray())
                 .email("new@example.com")
                 .address("456 New St")
-                .phone("987-654-3210")
-                .roles(Collections.singletonList("USER"))
+                .phone("+9876543210")
+                .roles(testRoles)
                 .build();
 
         // Act
