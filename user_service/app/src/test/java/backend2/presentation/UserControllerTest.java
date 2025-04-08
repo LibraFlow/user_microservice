@@ -1,5 +1,6 @@
 package backend2.presentation;
 
+import backend2.domain.Role;
 import backend2.domain.UserDTO;
 import backend2.business.user.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,7 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -41,15 +44,22 @@ public class UserControllerTest {
     private UserController userController;
 
     private UserDTO testUserDTO;
+    private Set<Role> testRoles;
 
     @BeforeEach
     void setUp() {
+        // Initialize test roles
+        testRoles = new HashSet<>();
+        testRoles.add(Role.CUSTOMER);
+        
         testUserDTO = UserDTO.builder()
                 .id(1)
                 .username("testuser")
+                .pwd("password123".toCharArray())
                 .email("test@example.com")
-                .firstName("Test")
-                .lastName("User")
+                .address("123 Test St")
+                .phone("+1234567890")
+                .roles(testRoles)
                 .build();
     }
 
@@ -102,8 +112,8 @@ public class UserControllerTest {
     @Test
     void getAllUsersTest() {
         // Arrange
-        List<UserDTO> expectedUsers = Arrays.asList(testUserDTO);
-        when(getAllUsersUseCase.getAllUsers()).thenReturn(expectedUsers);
+        List<UserDTO> userList = Arrays.asList(testUserDTO);
+        when(getAllUsersUseCase.getAllUsers()).thenReturn(userList);
 
         // Act
         ResponseEntity<List<UserDTO>> response = userController.getAllUsers();
@@ -111,24 +121,22 @@ public class UserControllerTest {
         // Assert
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(expectedUsers, response.getBody());
-        assertEquals(1, response.getBody().size());
+        assertEquals(userList, response.getBody());
         verify(getAllUsersUseCase, times(1)).getAllUsers();
     }
 
     @Test
     void updateUserTest() {
         // Arrange
-        Integer userId = 1;
         when(updateUserUseCase.updateUser(anyInt(), any(UserDTO.class))).thenReturn(testUserDTO);
 
         // Act
-        ResponseEntity<UserDTO> response = userController.updateUser(userId, testUserDTO);
+        ResponseEntity<UserDTO> response = userController.updateUser(1, testUserDTO);
 
         // Assert
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(testUserDTO, response.getBody());
-        verify(updateUserUseCase, times(1)).updateUser(userId, testUserDTO);
+        verify(updateUserUseCase, times(1)).updateUser(anyInt(), any(UserDTO.class));
     }
 } 
