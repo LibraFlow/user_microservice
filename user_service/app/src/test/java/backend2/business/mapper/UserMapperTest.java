@@ -22,14 +22,18 @@ class UserMapperTest {
 
     private UserEntity testUserEntity;
     private UserDTO testUserDTO;
+    private char[] testPassword;
 
     @BeforeEach
     void setUp() {
+        // Initialize test password
+        testPassword = "password123".toCharArray();
+        
         // Initialize test data for UserEntity
         testUserEntity = UserEntity.builder()
                 .id(1)
                 .username("testuser")
-                .pwd("password123")
+                .pwd(testPassword)
                 .email("test@example.com")
                 .address("123 Test St")
                 .phone("123-456-7890")
@@ -41,7 +45,7 @@ class UserMapperTest {
         testUserDTO = UserDTO.builder()
                 .id(1)
                 .username("testuser")
-                .pwd("password123")
+                .pwd(testPassword)
                 .email("test@example.com")
                 .address("123 Test St")
                 .phone("123-456-7890")
@@ -58,7 +62,7 @@ class UserMapperTest {
         assertNotNull(result);
         assertEquals(testUserEntity.getId(), result.getId());
         assertEquals(testUserEntity.getUsername(), result.getUsername());
-        assertEquals(testUserEntity.getPwd(), result.getPwd());
+        assertArrayEquals(testUserEntity.getPwd(), result.getPwd());
         assertEquals(testUserEntity.getEmail(), result.getEmail());
         assertEquals(testUserEntity.getAddress(), result.getAddress());
         assertEquals(testUserEntity.getPhone(), result.getPhone());
@@ -80,7 +84,7 @@ class UserMapperTest {
         UserEntity entityWithEmptyRoles = UserEntity.builder()
                 .id(1)
                 .username("testuser")
-                .pwd("password123")
+                .pwd(testPassword)
                 .email("test@example.com")
                 .address("123 Test St")
                 .phone("123-456-7890")
@@ -104,7 +108,7 @@ class UserMapperTest {
         assertNotNull(result);
         assertEquals(testUserDTO.getId(), result.getId());
         assertEquals(testUserDTO.getUsername(), result.getUsername());
-        assertEquals(testUserDTO.getPwd(), result.getPwd());
+        assertArrayEquals(testUserDTO.getPwd(), result.getPwd());
         assertEquals(testUserDTO.getEmail(), result.getEmail());
         assertEquals(testUserDTO.getAddress(), result.getAddress());
         assertEquals(testUserDTO.getPhone(), result.getPhone());
@@ -123,9 +127,10 @@ class UserMapperTest {
     @Test
     void toEntity_WithNewUser_ShouldSetCreatedAt() {
         // Arrange
+        char[] newPassword = "newpassword".toCharArray();
         UserDTO newUserDTO = UserDTO.builder()
                 .username("newuser")
-                .pwd("newpassword")
+                .pwd(newPassword)
                 .email("new@example.com")
                 .address("456 New St")
                 .phone("987-654-3210")
