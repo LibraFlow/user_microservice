@@ -1,6 +1,7 @@
 package backend2.business.user;
 
 import backend2.domain.UserDTO;
+import backend2.domain.Role;
 import backend2.persistence.UserRepository;
 import backend2.persistence.entity.UserEntity;
 import backend2.business.mapper.UserMapper;
@@ -10,6 +11,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,37 +35,46 @@ class AddUserUseCaseTest {
     private UserDTO testUserDTO;
     private UserEntity testUserEntity;
     private UserEntity savedUserEntity;
+    private Set<Role> testRoles;
 
     @BeforeEach
     void setUp() {
+        // Initialize test roles
+        testRoles = new HashSet<>();
+        testRoles.add(Role.CUSTOMER);
+        
         // Initialize test data
         testUserDTO = UserDTO.builder()
                 .id(1)
                 .username("testuser")
+                .pwd("password123".toCharArray())
                 .email("test@example.com")
-                .password("password123")
-                .firstName("Test")
-                .lastName("User")
-                .dateOfBirth(java.time.LocalDate.of(1990, 1, 1))
+                .address("123 Test St")
+                .phone("+1234567890")
+                .roles(testRoles)
                 .build();
 
-        testUserEntity = new UserEntity();
-        testUserEntity.setId(1);
-        testUserEntity.setUsername("testuser");
-        testUserEntity.setEmail("test@example.com");
-        testUserEntity.setPassword("password123");
-        testUserEntity.setFirstName("Test");
-        testUserEntity.setLastName("User");
-        testUserEntity.setDateOfBirth(java.time.LocalDate.of(1990, 1, 1));
+        testUserEntity = UserEntity.builder()
+                .id(1)
+                .username("testuser")
+                .pwd("password123".toCharArray())
+                .email("test@example.com")
+                .address("123 Test St")
+                .phone("+1234567890")
+                .roles(testRoles)
+                .createdAt(LocalDate.now())
+                .build();
 
-        savedUserEntity = new UserEntity();
-        savedUserEntity.setId(1);
-        savedUserEntity.setUsername("testuser");
-        savedUserEntity.setEmail("test@example.com");
-        savedUserEntity.setPassword("password123");
-        savedUserEntity.setFirstName("Test");
-        savedUserEntity.setLastName("User");
-        savedUserEntity.setDateOfBirth(java.time.LocalDate.of(1990, 1, 1));
+        savedUserEntity = UserEntity.builder()
+                .id(1)
+                .username("testuser")
+                .pwd("password123".toCharArray())
+                .email("test@example.com")
+                .address("123 Test St")
+                .phone("+1234567890")
+                .roles(testRoles)
+                .createdAt(LocalDate.now())
+                .build();
     }
 
     @Test
@@ -77,10 +91,11 @@ class AddUserUseCaseTest {
         assertNotNull(result);
         assertEquals(testUserDTO.getId(), result.getId());
         assertEquals(testUserDTO.getUsername(), result.getUsername());
+        assertArrayEquals(testUserDTO.getPwd(), result.getPwd());
         assertEquals(testUserDTO.getEmail(), result.getEmail());
-        assertEquals(testUserDTO.getFirstName(), result.getFirstName());
-        assertEquals(testUserDTO.getLastName(), result.getLastName());
-        assertEquals(testUserDTO.getDateOfBirth(), result.getDateOfBirth());
+        assertEquals(testUserDTO.getAddress(), result.getAddress());
+        assertEquals(testUserDTO.getPhone(), result.getPhone());
+        assertEquals(testUserDTO.getRoles(), result.getRoles());
 
         // Verify interactions
         verify(userMapper, times(1)).toEntity(testUserDTO);
