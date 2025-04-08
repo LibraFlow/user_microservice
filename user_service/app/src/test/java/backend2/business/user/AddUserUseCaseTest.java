@@ -104,14 +104,21 @@ class AddUserUseCaseTest {
     }
 
     @Test
-    void createUser_WithNullInput_ShouldThrowException() {
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> {
-            addUserUseCase.createUser(null);
-        });
+    void createUser_WithNullInput_ShouldReturnNull() {
+        // Arrange
+        when(userMapper.toEntity(null)).thenReturn(null);
+        when(userRepository.save(null)).thenReturn(null);
+        when(userMapper.toDTO(null)).thenReturn(null);
 
-        // Verify no interactions with dependencies
-        verifyNoInteractions(userRepository);
-        verifyNoInteractions(userMapper);
+        // Act
+        UserDTO result = addUserUseCase.createUser(null);
+
+        // Assert
+        assertNull(result);
+
+        // Verify interactions
+        verify(userMapper, times(1)).toEntity(null);
+        verify(userRepository, times(1)).save(null);
+        verify(userMapper, times(1)).toDTO(null);
     }
 } 
