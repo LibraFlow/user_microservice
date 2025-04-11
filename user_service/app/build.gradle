@@ -93,10 +93,10 @@ dependencyCheck {
     analyzers {
         assemblyEnabled = false
     }
-    // Skip NVD update if no API key is provided
-    skipUpdate = true
     // Use local data only
     data {
         directory = 'dependency-check-data'
     }
+    // Disable automatic updates
+    autoUpdate = false
 }
