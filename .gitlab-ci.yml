@@ -14,8 +14,8 @@ variables:
 
 cache:
   paths:
-  - ".gradle/wrapper"
-  - ".gradle/caches"
+  - user_service/.gradle/wrapper
+  - user_service/.gradle/caches
 
 build:
   stage: build
@@ -25,7 +25,7 @@ build:
   - gradle build
   artifacts:
     paths:
-    - user_service/build/libs/*.jar
+    - user_service/app/build/libs/*.jar
 
 test:
   stage: test
