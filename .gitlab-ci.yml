@@ -6,12 +6,6 @@ stages:
 variables:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
-cache:
-  paths:
-  - user_service/app/.gradle/wrapper
-  - user_service/app/.gradle/caches
-  - user_service/app/dependency-check-data
-
 static_analysis:
   stage: security_testing
   image: gradle:jdk17
@@ -43,7 +37,7 @@ dependency_check:
   script:
     - cd user_service
     - mkdir -p app/dependency-check-data
-    - gradle dependencyCheckAnalyze || true
+    - try { gradle dependencyCheckAnalyze } catch { Write-Host "Dependency check failed but continuing..." }
     # Check if dependency check report exists and contains vulnerabilities
     - |
       if (Test-Path "app/build/reports/dependency-check-report.html") {
