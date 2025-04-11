@@ -34,20 +34,14 @@ test:
   dependencies:
   - build
 
-include:
-  - template: Security/SAST.gitlab-ci.yml
-
-sast:
+static_analysis:
   stage: test
+  image: gradle:jdk17
   script:
-    # Install GitLab SAST CLI
-    - $ProgressPreference = 'SilentlyContinue'
-    - Invoke-WebRequest -Uri "https://gitlab.com/gitlab-org/security-products/analyzers/sast/-/raw/main/scripts/install.ps1" -OutFile "install.ps1"
-    - .\install.ps1
-    # Run SAST analysis
-    - gitlab-sast run
+    - cd user_service
+    - gradle spotbugsMain spotbugsTest
   artifacts:
     reports:
-      sast: gl-sast-report.json
+      codequality: user_service/build/reports/spotbugs/main.xml
     paths:
-      - gl-sast-report.json
+      - user_service/build/reports/spotbugs/
