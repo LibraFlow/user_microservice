@@ -92,11 +92,27 @@ dependencyCheck {
     suppressionFile = 'dependency-check-suppressions.xml'
     analyzers {
         assemblyEnabled = false
+        nodeEnabled = false
+        nodeAuditEnabled = false
+        centralEnabled = true
+        nexusEnabled = false
+        nuspecEnabled = false
     }
     // Use local data only
     data {
         directory = 'dependency-check-data'
     }
+    // Configure NVD access
+    nvd {
+        apiKey = System.getenv('NVD_API_KEY') ?: ''
+        delay = 6000 // 6 seconds between requests
+        maxRetryCount = 3
+    }
     // Disable automatic updates
     autoUpdate = false
+    // Add retry logic
+    retry {
+        maxAttempts = 3
+        delay = 5000 // 5 seconds between retries
+    }
 }

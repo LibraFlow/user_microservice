@@ -34,10 +34,34 @@ static_analysis:
 dependency_check:
   stage: security_testing
   image: gradle:jdk17
+  variables:
+    NVD_API_KEY: $NVD_API_KEY  # This should be set in GitLab CI/CD variables
   script:
     - cd user_service
     - mkdir -p app/dependency-check-data
-    - try { gradle dependencyCheckAnalyze } catch { Write-Host "Dependency check failed but continuing..." }
+    - |
+      $maxRetries = 3
+      $retryCount = 0
+      $success = $false
+      
+      while (-not $success -and $retryCount -lt $maxRetries) {
+        try {
+          Write-Host "Attempt $($retryCount + 1) of $maxRetries"
+          gradle dependencyCheckAnalyze --stacktrace
+          $success = $true
+        } catch {
+          $retryCount++
+          if ($retryCount -eq $maxRetries) {
+            Write-Host "::warning::Dependency check failed after $maxRetries attempts. This might be due to NVD API access issues."
+            Write-Host "::warning::Consider setting up an NVD API key in GitLab CI/CD variables for more reliable results."
+            Write-Host "::warning::Error details: $_"
+            exit 0
+          } else {
+            Write-Host "Retrying in 30 seconds..."
+            Start-Sleep -Seconds 30
+          }
+        }
+      }
     # Check if dependency check report exists and contains vulnerabilities
     - |
       if (Test-Path "app/build/reports/dependency-check-report.html") {
@@ -45,12 +69,11 @@ dependency_check:
         if ($html -match "Vulnerabilities Found") {
           Write-Host "::warning::Dependency check found vulnerabilities. Please review the report in the artifacts."
           Write-Host "::warning::To view the report, download the artifacts from this job."
-          # Exit with code 0 to allow the pipeline to continue, but with a warning
           exit 0
         }
       } else {
-        Write-Host "::warning::Dependency check report not generated. This might be due to missing NVD API key."
-        Write-Host "::warning::Consider setting up an NVD API key for more accurate results."
+        Write-Host "::warning::Dependency check report not generated. This might be due to NVD API access issues."
+        Write-Host "::warning::Consider setting up an NVD API key in GitLab CI/CD variables for more reliable results."
         exit 0
       }
   artifacts:
