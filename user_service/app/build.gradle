@@ -5,6 +5,9 @@
  * For more details on building Java & JVM projects, please refer to https://docs.gradle.org/8.8/userguide/building_java_projects.html in the Gradle documentation.
  */
 
+import com.github.spotbugs.snom.Effort
+import com.github.spotbugs.snom.Confidence
+
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     id 'application'
@@ -74,8 +77,8 @@ spotbugs {
     ignoreFailures = false
     showStackTraces = true
     showProgress = true
-    effort = com.github.spotbugs.snom.Effort.MAX
-    reportLevel = com.github.spotbugs.snom.Confidence.HIGH
+    effort = Effort.MAX
+    reportLevel = Confidence.HIGH
 }
 
 tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
