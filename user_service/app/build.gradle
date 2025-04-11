@@ -92,28 +92,26 @@ dependencyCheck {
     suppressionFile = 'dependency-check-suppressions.xml'
     analyzers {
         assemblyEnabled = false
-        nodeEnabled = false
-        nodeAuditEnabled = false
-        centralEnabled = false
-        nexusEnabled = false
-        ossIndexEnabled = false
+        // Enable NVD analyzer
+        nvd {
+            enabled = true
+        }
+        // Enable Node Audit analyzer
+        nodeAudit {
+            enabled = true
+        }
     }
-    // Use local data only
+    // Configure data directory
     data {
         directory = 'dependency-check-data'
     }
-    // Disable automatic updates
-    autoUpdate = false
-    // Skip update check
-    skipUpdate = true
-    // Skip test dependencies
-    skipTestScope = true
-    // Skip runtime dependencies
-    skipRuntimeScope = false
-    // Skip provided dependencies
-    skipProvidedScope = true
-    // Skip optional dependencies
-    skipOptionalScope = true
-    // Skip system dependencies
-    skipSystemScope = true
+    // Enable auto-updates
+    autoUpdate = true
+    // Add retry configuration
+    retry {
+        enabled = true
+        maxAttempts = 3
+    }
+    // Add connection timeout
+    connectionTimeout = 300000 // 5 minutes
 }
