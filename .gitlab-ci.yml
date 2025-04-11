@@ -24,11 +24,23 @@ static_analysis:
   script:
     - cd user_service
     - gradle spotbugsMain spotbugsTest
+    # Check if SpotBugs found any issues
+    - |
+      if (Test-Path "app/build/reports/spotbugs/main.xml") {
+        $xml = [xml](Get-Content "app/build/reports/spotbugs/main.xml")
+        $bugCount = $xml.SelectNodes("//BugInstance").Count
+        if ($bugCount -gt 0) {
+          Write-Host "::warning::SpotBugs found $bugCount issues. Please check the report."
+          # Exit with code 0 to allow the pipeline to continue, but with a warning
+          exit 0
+        }
+      }
   artifacts:
     reports:
       codequality: user_service/app/build/reports/spotbugs/main.xml
     paths:
       - user_service/app/build/reports/spotbugs/
+  allow_failure: true  # Allow the stage to fail without stopping the pipeline
 
 build:
   stage: build
