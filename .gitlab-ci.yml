@@ -10,6 +10,8 @@ stages:
 - test
 variables:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+  SAST_DISABLE_DIND: "true"  # Disable Docker-in-Docker for Windows
+  SAST_ANALYZER_IMAGES: "registry.gitlab.com/gitlab-org/security-products/analyzers"  # Use GitLab's analyzer images
 cache:
   paths:
   - ".gradle/wrapper"
@@ -31,7 +33,13 @@ test:
   - gradle test
   dependencies:
   - build
+
+include:
+  - template: Security/SAST.gitlab-ci.yml
+
 sast:
   stage: test
-include:
-- template: Security/SAST.gitlab-ci.yml
+  variables:
+    SAST_DISABLE_DIND: "true"
+    SAST_ANALYZER_IMAGES: "registry.gitlab.com/gitlab-org/security-products/analyzers"
+    SAST_IMAGE_SUFFIX: "-ubi8"  # Use UBI-based images for better compatibility
