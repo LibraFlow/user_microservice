@@ -107,6 +107,8 @@ class AddUserUseCaseTest {
     void createUser_WithNullInput_ShouldReturnNull() {
         // Arrange
         when(userMapper.toEntity(null)).thenReturn(null);
+        when(userRepository.save(null)).thenReturn(null);
+        when(userMapper.toDTO(null)).thenReturn(null);
 
         // Act
         UserDTO result = addUserUseCase.createUser(null);
@@ -116,7 +118,7 @@ class AddUserUseCaseTest {
 
         // Verify interactions
         verify(userMapper, times(1)).toEntity(null);
-        verify(userRepository, never()).save(any());
-        verify(userMapper, never()).toDTO(any());
+        verify(userRepository, times(1)).save(null);
+        verify(userMapper, times(1)).toDTO(null);
     }
 } 

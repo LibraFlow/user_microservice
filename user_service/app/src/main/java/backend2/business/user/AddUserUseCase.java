@@ -19,15 +19,7 @@ public class AddUserUseCase {
 
     @Transactional
     public UserDTO createUser(UserDTO userDTO) {
-        if (userDTO == null) {
-            return null;
-        }
-        
         UserEntity userEntity = userMapper.toEntity(userDTO);
-        if (userEntity == null) {
-            return null;
-        }
-            
         UserEntity savedUser = userRepository.save(userEntity);
         return userMapper.toDTO(savedUser);
     }
