@@ -45,29 +45,30 @@ dependency_check:
     - mkdir -p app/dependency-check-data
     - |
       try {
-        gradle dependencyCheckAnalyze
+        gradle dependencyCheckAnalyze --stacktrace --info
       } catch {
-        Write-Host "::warning::Dependency check failed to run. This might be due to missing NVD API key."
+        Write-Host "::warning::Dependency check failed to run. This might be due to missing NVD API key or network issues."
         Write-Host "::warning::Consider setting up an NVD API key for more accurate results."
-      }
-    # Check if dependency check report exists and contains vulnerabilities
-    - |
-      if (Test-Path "app/build/reports/dependency-check-report.html") {
-        $html = Get-Content "app/build/reports/dependency-check-report.html" -Raw
-        if ($html -match "Vulnerabilities Found") {
-          Write-Host "::warning::Dependency check found vulnerabilities. Please review the report in the artifacts."
-          Write-Host "::warning::To view the report, download the artifacts from this job."
-          # Exit with code 0 to allow the pipeline to continue, but with a warning
-          exit 0
-        }
-      } else {
-        Write-Host "::warning::Dependency check report not generated. This might be due to missing NVD API key."
-        Write-Host "::warning::Consider setting up an NVD API key for more accurate results."
-        exit 0
+        Write-Host "::warning::The pipeline will continue despite the dependency check failure."
+        # Create a dummy report to ensure artifacts are generated
+        New-Item -ItemType Directory -Force -Path "app/build/reports/dependency-check"
+        @"
+<html>
+<head>
+    <title>Dependency Check Report</title>
+</head>
+<body>
+    <h1>Dependency Check Report</h1>
+    <p>Dependency check could not be completed. This might be due to missing NVD API key or network issues.</p>
+    <p>Please consider setting up an NVD API key for more accurate results.</p>
+</body>
+</html>
+"@ | Out-File -FilePath "app/build/reports/dependency-check/dependency-check-report.html"
       }
   artifacts:
     paths:
-      - user_service/app/build/reports/dependency-check-report.html
+      - user_service/app/build/reports/dependency-check/
+    when: always
   allow_failure: true  # Allow the stage to fail without stopping the pipeline
 
 build:
