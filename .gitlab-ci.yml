@@ -6,6 +6,7 @@
 # Note that environment variables can be set in several places
 # See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
 stages:
+- static_analysis
 - build
 - test
 
@@ -17,27 +18,8 @@ cache:
   - user_service/.gradle/wrapper
   - user_service/.gradle/caches
 
-build:
-  stage: build
-  image: gradle:jdk17
-  script:
-  - cd user_service
-  - gradle build
-  artifacts:
-    paths:
-    - user_service/app/build/libs/*.jar
-
-test:
-  stage: test
-  image: gradle:jdk17
-  script:
-  - cd user_service
-  - gradle test
-  dependencies:
-  - build
-
 static_analysis:
-  stage: test
+  stage: static_analysis
   image: gradle:jdk17
   script:
     - cd user_service
@@ -47,3 +29,24 @@ static_analysis:
       codequality: user_service/app/build/reports/spotbugs/main.xml
     paths:
       - user_service/app/build/reports/spotbugs/
+
+build:
+  stage: build
+  image: gradle:jdk17
+  script:
+  - cd user_service
+  - gradle build
+  artifacts:
+    paths:
+    - user_service/app/build/libs/*.jar
+  dependencies:
+  - static_analysis
+
+test:
+  stage: test
+  image: gradle:jdk17
+  script:
+  - cd user_service
+  - gradle test
+  dependencies:
+  - build
