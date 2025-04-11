@@ -1,47 +1,37 @@
+# You can override the included template(s) by including variable overrides
+# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
+# Secret Detection customization: https://docs.gitlab.com/ee/user/application_security/secret_detection/pipeline/#customization
+# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
+# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
+# Note that environment variables can be set in several places
+# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
 stages:
-  - build
-  - test
-  # - deploy
-
+- build
+- test
 variables:
-  # Gradle-specific variables
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
-
-# Cache Gradle dependencies to speed up builds
 cache:
   paths:
-    - .gradle/wrapper
-    - .gradle/caches
-
+  - ".gradle/wrapper"
+  - ".gradle/caches"
 build:
   stage: build
-  image: gradle:jdk17 # Use the appropriate Gradle and JDK version for your project
+  image: gradle:jdk17
   script:
-    - cd user_service
-    - gradle build
+  - cd user_service
+  - gradle build
   artifacts:
     paths:
-      - user_service/build/libs/*.jar
-
+    - user_service/build/libs/*.jar
 test:
   stage: test
   image: gradle:jdk17
   script:
-    - cd user_service
-    - gradle test
+  - cd user_service
+  - gradle test
   dependencies:
-    - build
-
-# deploy:
-#   stage: deploy
-#   image: docker:latest
-#   services:
-#     - docker:dind
-#   script:
-#     - cd database
-#     - docker-compose up -d
-#     - cd ../user_service
-#     - docker build -t user_service:latest .
-#     - docker run -d --name user_service_app --network host user_service:latest
-#   only:
-#     - main # Deploy only when changes are pushed to the main branch
+  - build
+sast:
+  stage: test
+include:
+- template: Security/SAST.gitlab-ci.yml
