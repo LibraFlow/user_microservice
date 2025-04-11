@@ -39,7 +39,15 @@ include:
 
 sast:
   stage: test
-  variables:
-    SAST_DISABLE_DIND: "true"
-    SAST_ANALYZER_IMAGES: "registry.gitlab.com/gitlab-org/security-products/analyzers"
-    SAST_IMAGE_SUFFIX: "-ubi8"  # Use UBI-based images for better compatibility
+  script:
+    # Install GitLab SAST CLI
+    - $ProgressPreference = 'SilentlyContinue'
+    - Invoke-WebRequest -Uri "https://gitlab.com/gitlab-org/security-products/analyzers/sast/-/raw/main/scripts/install.ps1" -OutFile "install.ps1"
+    - .\install.ps1
+    # Run SAST analysis
+    - gitlab-sast run
+  artifacts:
+    reports:
+      sast: gl-sast-report.json
+    paths:
+      - gl-sast-report.json
