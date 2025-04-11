@@ -75,7 +75,7 @@ spotbugs {
     showStackTraces = true
     showProgress = true
     effort = com.github.spotbugs.snom.Effort.MAX
-    reportLevel = 'high'
+    reportLevel = com.github.spotbugs.snom.Confidence.HIGH
 }
 
 tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
