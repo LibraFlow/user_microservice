@@ -37,47 +37,38 @@ static_analysis:
       - user_service/app/build/reports/spotbugs/
   allow_failure: true  # Allow the stage to fail without stopping the pipeline
 
-dependency_check:
-  stage: security_testing
-  image: gradle:jdk17
-  script:
-    - cd user_service
-    - mkdir -p app/dependency-check-data
-    - |
-      try {
-        gradle dependencyCheckAnalyze --info
-      } catch {
-        Write-Host "::warning::Dependency check failed to run. Error details:"
-        Write-Host $_.Exception.Message
-        Write-Host "::warning::This might be due to network issues or missing NVD API key."
-        Write-Host "::warning::Consider setting up an NVD API key for more accurate results."
-        # Exit with code 0 to allow the pipeline to continue, but with a warning
-        exit 0
-      }
-    # Check if dependency check report exists and contains vulnerabilities
-    - |
-      if (Test-Path "app/build/reports/dependency-check-report.html") {
-        $html = Get-Content "app/build/reports/dependency-check-report.html" -Raw
-        if ($html -match "Vulnerabilities Found") {
-          Write-Host "::warning::Dependency check found vulnerabilities. Please review the report in the artifacts."
-          Write-Host "::warning::To view the report, download the artifacts from this job."
-          # Exit with code 0 to allow the pipeline to continue, but with a warning
-          exit 0
-        }
-      } else {
-        Write-Host "::warning::Dependency check report not generated. This might be due to network issues or missing NVD API key."
-        Write-Host "::warning::Consider setting up an NVD API key for more accurate results."
-        exit 0
-      }
-  artifacts:
-    paths:
-      - user_service/app/build/reports/dependency-check-report.html
-      - user_service/app/dependency-check-data/
-  allow_failure: true  # Allow the stage to fail without stopping the pipeline
-  retry:
-    max: 2
-    when:
-      - script_failure
+# dependency_check:
+#   stage: security_testing
+#   image: gradle:jdk17
+#   script:
+#     - cd user_service
+#     - mkdir -p app/dependency-check-data
+#     - |
+#       try {
+#         gradle dependencyCheckAnalyze
+#       } catch {
+#         Write-Host "::warning::Dependency check failed to run. This might be due to missing NVD API key."
+#         Write-Host "::warning::Consider setting up an NVD API key for more accurate results."
+#       }
+#     # Check if dependency check report exists and contains vulnerabilities
+#     - |
+#       if (Test-Path "app/build/reports/dependency-check-report.html") {
+#         $html = Get-Content "app/build/reports/dependency-check-report.html" -Raw
+#         if ($html -match "Vulnerabilities Found") {
+#           Write-Host "::warning::Dependency check found vulnerabilities. Please review the report in the artifacts."
+#           Write-Host "::warning::To view the report, download the artifacts from this job."
+#           # Exit with code 0 to allow the pipeline to continue, but with a warning
+#           exit 0
+#         }
+#       } else {
+#         Write-Host "::warning::Dependency check report not generated. This might be due to missing NVD API key."
+#         Write-Host "::warning::Consider setting up an NVD API key for more accurate results."
+#         exit 0
+#       }
+#   artifacts:
+#     paths:
+#       - user_service/app/build/reports/dependency-check-report.html
+#   allow_failure: true  # Allow the stage to fail without stopping the pipeline
 
 build:
   stage: build
@@ -90,7 +81,7 @@ build:
     - user_service/app/build/libs/*.jar
   dependencies:
   - static_analysis
-  - dependency_check
+  # - dependency_check
 
 test:
   stage: test

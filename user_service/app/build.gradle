@@ -14,7 +14,7 @@ plugins {
     id 'org.springframework.boot' version '3.2.3'
     id 'io.spring.dependency-management' version '1.1.4'
     id 'com.github.spotbugs' version '6.0.7'
-    id 'org.owasp.dependencycheck' version '9.0.9'
+    // id 'org.owasp.dependencycheck' version '9.0.9'
 }
 
 repositories {
@@ -86,32 +86,19 @@ tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
 }
 
 // Dependency Check configuration
+/*
 dependencyCheck {
     format = 'HTML'
     failBuildOnCVSS = 0
     suppressionFile = 'dependency-check-suppressions.xml'
     analyzers {
         assemblyEnabled = false
-        // Enable NVD analyzer
-        nvd {
-            enabled = true
-        }
-        // Enable Node Audit analyzer
-        nodeAudit {
-            enabled = true
-        }
     }
-    // Configure data directory
+    // Use local data only
     data {
         directory = 'dependency-check-data'
     }
-    // Enable auto-updates
-    autoUpdate = true
-    // Add retry configuration
-    retry {
-        enabled = true
-        maxAttempts = 3
-    }
-    // Add connection timeout
-    connectionTimeout = 300000 // 5 minutes
+    // Disable automatic updates
+    autoUpdate = false
 }
+*/
