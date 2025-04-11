@@ -44,6 +44,6 @@ static_analysis:
     - gradle spotbugsMain spotbugsTest
   artifacts:
     reports:
-      codequality: user_service/build/reports/spotbugs/main.xml
+      codequality: user_service/app/build/reports/spotbugs/main.xml
     paths:
-      - user_service/build/reports/spotbugs/
+      - user_service/app/build/reports/spotbugs/
