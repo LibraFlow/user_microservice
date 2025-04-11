@@ -14,6 +14,7 @@ plugins {
     id 'org.springframework.boot' version '3.2.3'
     id 'io.spring.dependency-management' version '1.1.4'
     id 'com.github.spotbugs' version '6.0.7'
+    id 'org.owasp.dependencycheck' version '9.0.9'
 }
 
 repositories {
@@ -81,5 +82,15 @@ tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
     reports {
         xml.required = true
         html.required = true
+    }
+}
+
+// Dependency Check configuration
+dependencyCheck {
+    format = 'HTML'
+    failBuildOnCVSS = 0
+    suppressionFile = 'dependency-check-suppressions.xml'
+    analyzers {
+        assemblyEnabled = false
     }
 }

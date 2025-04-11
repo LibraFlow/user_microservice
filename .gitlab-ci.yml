@@ -6,15 +6,20 @@
 # Note that environment variables can be set in several places
 # See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
 stages:
-- static_analysis
+- security_testing
 - build
 - test
 
 variables:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
+cache:
+  paths:
+  - user_service/app/.gradle/wrapper
+  - user_service/app/.gradle/caches
+
 static_analysis:
-  stage: static_analysis
+  stage: security_testing
   image: gradle:jdk17
   script:
     - cd user_service
@@ -38,6 +43,28 @@ static_analysis:
       - user_service/app/build/reports/spotbugs/
   allow_failure: true  # Allow the stage to fail without stopping the pipeline
 
+dependency_check:
+  stage: security_testing
+  image: gradle:jdk17
+  script:
+    - cd user_service
+    - gradle dependencyCheckAnalyze
+    # Check if dependency check found any issues
+    - |
+      if (Test-Path "app/build/reports/dependency-check-report.html") {
+        $html = Get-Content "app/build/reports/dependency-check-report.html" -Raw
+        if ($html -match "Vulnerabilities Found") {
+          Write-Host "::warning::Dependency check found vulnerabilities. Please review the report in the artifacts."
+          Write-Host "::warning::To view the report, download the artifacts from this job."
+          # Exit with code 0 to allow the pipeline to continue, but with a warning
+          exit 0
+        }
+      }
+  artifacts:
+    paths:
+      - user_service/app/build/reports/dependency-check-report.html
+  allow_failure: true  # Allow the stage to fail without stopping the pipeline
+
 build:
   stage: build
   image: gradle:jdk17
@@ -49,6 +76,7 @@ build:
     - user_service/app/build/libs/*.jar
   dependencies:
   - static_analysis
+  - dependency_check
 
 test:
   stage: test
