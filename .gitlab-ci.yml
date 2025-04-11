@@ -15,8 +15,8 @@ variables:
 
 cache:
   paths:
-  - user_service/.gradle/wrapper
-  - user_service/.gradle/caches
+  - user_service/app/.gradle/wrapper
+  - user_service/app/.gradle/caches
 
 static_analysis:
   stage: static_analysis
@@ -30,7 +30,8 @@ static_analysis:
         $xml = [xml](Get-Content "app/build/reports/spotbugs/main.xml")
         $bugCount = $xml.SelectNodes("//BugInstance").Count
         if ($bugCount -gt 0) {
-          Write-Host "::warning::SpotBugs found $bugCount issues. Please check the report."
+          Write-Host "::warning::SpotBugs found $bugCount potential issues. Please review the detailed report in the artifacts."
+          Write-Host "::warning::To view the report, download the artifacts from this job or check the Code Quality report."
           # Exit with code 0 to allow the pipeline to continue, but with a warning
           exit 0
         }
