@@ -8,14 +8,15 @@
 stages:
 - build
 - test
+
 variables:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
-  SAST_DISABLE_DIND: "true"  # Disable Docker-in-Docker for Windows
-  SAST_ANALYZER_IMAGES: "registry.gitlab.com/gitlab-org/security-products/analyzers"  # Use GitLab's analyzer images
+
 cache:
   paths:
   - ".gradle/wrapper"
   - ".gradle/caches"
+
 build:
   stage: build
   image: gradle:jdk17
@@ -25,6 +26,7 @@ build:
   artifacts:
     paths:
     - user_service/build/libs/*.jar
+
 test:
   stage: test
   image: gradle:jdk17

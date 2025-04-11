@@ -107,8 +107,6 @@ class AddUserUseCaseTest {
     void createUser_WithNullInput_ShouldReturnNull() {
         // Arrange
         when(userMapper.toEntity(null)).thenReturn(null);
-        // We don't need to mock save(null) since toEntity returns null
-        when(userMapper.toDTO(null)).thenReturn(null);
 
         // Act
         UserDTO result = addUserUseCase.createUser(null);
@@ -118,7 +116,7 @@ class AddUserUseCaseTest {
 
         // Verify interactions
         verify(userMapper, times(1)).toEntity(null);
-        verify(userRepository, never()).save(any());  // save should never be called
-        verify(userMapper, never()).toDTO(any());  // toDTO should never be called
+        verify(userRepository, never()).save(any());
+        verify(userMapper, never()).toDTO(any());
     }
 } 
