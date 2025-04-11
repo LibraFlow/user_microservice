@@ -13,11 +13,6 @@ stages:
 variables:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
-cache:
-  paths:
-  - user_service/app/.gradle/wrapper
-  - user_service/app/.gradle/caches
-
 static_analysis:
   stage: static_analysis
   image: gradle:jdk17
