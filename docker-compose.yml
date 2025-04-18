@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  db6:
+    image: postgres:latest
+    container_name: user_container
+    environment:
+      POSTGRES_USER: user6
+      POSTGRES_PASSWORD: password6
+      POSTGRES_DB: db6
+    ports:
+      - "5437:5432"
+    volumes:
+      - db6-data:/var/lib/postgresql/data
+    networks:
+      - user-network
+
+  user-service:
+    build:
+      context: ./user_service
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "8087:8087"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db6:5432/db6
+      - SPRING_DATASOURCE_USERNAME=user6
+      - SPRING_DATASOURCE_PASSWORD=password6
+    depends_on:
+      - db6
+    networks:
+      - user-network
+
+volumes:
+  db6-data:
+
+networks:
+  user-network:
+    driver: bridge 
