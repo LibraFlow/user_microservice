@@ -2,9 +2,15 @@ stages:
 - security_testing
 - build
 - test
+- deploy-kubernetes
 
 variables:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+  DOCKER_IMAGE: ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/user-service/user-service:${CI_COMMIT_SHA}
+  # Add NVD API key for better dependency check results
+  NVD_API_KEY: ${NVD_API_KEY}
+  KUBE_NAMESPACE: user-service
+  KUBE_CLUSTER: ${GCP_PROJECT_ID}-gke
 
 cache:
   paths:
@@ -31,44 +37,42 @@ static_analysis:
         }
       }
   artifacts:
+    when: always
+    expire_in: 1 week
     reports:
       codequality: user_service/app/build/reports/spotbugs/main.xml
     paths:
       - user_service/app/build/reports/spotbugs/
   allow_failure: true  # Allow the stage to fail without stopping the pipeline
 
-# dependency_check:
-#   stage: security_testing
-#   image: gradle:jdk17
-#   script:
-#     - cd user_service
-#     - mkdir -p app/dependency-check-data
-#     - |
-#       try {
-#         gradle dependencyCheckAnalyze
-#       } catch {
-#         Write-Host "::warning::Dependency check failed to run. This might be due to missing NVD API key."
-#         Write-Host "::warning::Consider setting up an NVD API key for more accurate results."
-#       }
-#     # Check if dependency check report exists and contains vulnerabilities
-#     - |
-#       if (Test-Path "app/build/reports/dependency-check-report.html") {
-#         $html = Get-Content "app/build/reports/dependency-check-report.html" -Raw
-#         if ($html -match "Vulnerabilities Found") {
-#           Write-Host "::warning::Dependency check found vulnerabilities. Please review the report in the artifacts."
-#           Write-Host "::warning::To view the report, download the artifacts from this job."
-#           # Exit with code 0 to allow the pipeline to continue, but with a warning
-#           exit 0
-#         }
-#       } else {
-#         Write-Host "::warning::Dependency check report not generated. This might be due to missing NVD API key."
-#         Write-Host "::warning::Consider setting up an NVD API key for more accurate results."
-#         exit 0
-#       }
-#   artifacts:
-#     paths:
-#       - user_service/app/build/reports/dependency-check-report.html
-#   allow_failure: true  # Allow the stage to fail without stopping the pipeline
+dependency_check:
+  stage: security_testing
+  image: gradle:jdk17
+  script:
+    - cd user_service
+    - mkdir -p app/dependency-check-data
+    - gradle dependencyCheckAnalyze || Write-Host "::warning::Dependency check failed to run. This might be due to missing NVD API key."
+    # Check if dependency check report exists and contains vulnerabilities
+    - |
+      if (Test-Path "app/build/reports/dependency-check-report.html") {
+        $html = Get-Content "app/build/reports/dependency-check-report.html" -Raw
+        if ($html -match "Vulnerabilities Found") {
+          Write-Host "::warning::Dependency check found vulnerabilities. Please review the report in the artifacts."
+          Write-Host "::warning::To view the report, download the artifacts from this job."
+          # Exit with code 0 to allow the pipeline to continue, but with a warning
+          exit 0
+        }
+      } else {
+        Write-Host "::warning::Dependency check report not generated. This might be due to missing NVD API key."
+        exit 0
+      }
+  artifacts:
+    reports:
+      dependency_scanning: user_service/app/build/reports/dependency-check-report.json
+    paths:
+      - user_service/app/build/reports/dependency-check-report.html
+      - user_service/app/build/reports/dependency-check-report.json
+  allow_failure: true  # Allow the stage to fail without stopping the pipeline
 
 build:
   stage: build
@@ -81,7 +85,7 @@ build:
     - user_service/app/build/libs/*.jar
   dependencies:
   - static_analysis
-  # - dependency_check
+  - dependency_check
 
 test:
   stage: test
@@ -91,3 +95,39 @@ test:
   - gradle test
   dependencies:
   - build
+
+deploy-kubernetes:
+  stage: deploy-kubernetes
+  image: google/cloud-sdk:latest
+  variables:
+    DOCKER_HOST: npipe:////./pipe/docker_engine
+  script:
+    - if (!(Test-Path "//./pipe/docker_engine")) { throw "Docker Desktop is not running. Please start Docker Desktop and try again." }
+    - $bytes = [System.Text.Encoding]::UTF8.GetBytes($GCP_K8S_SERVICE_ACCOUNT_KEY)
+    - $encodedText = [Convert]::ToBase64String($bytes)
+    - Set-Content -Path "$env:TEMP\k8s-key.json" -Value $GCP_K8S_SERVICE_ACCOUNT_KEY
+    - gcloud auth activate-service-account --key-file="$env:TEMP\k8s-key.json"
+    - gcloud config set project $GCP_PROJECT_ID
+    - gcloud auth configure-docker ${GCP_REGION}-docker.pkg.dev
+    - docker build -t $DOCKER_IMAGE ./user_service
+    - docker push $DOCKER_IMAGE
+    - gcloud container clusters get-credentials $KUBE_CLUSTER --region $GCP_REGION --project $GCP_PROJECT_ID
+    - kubectl create namespace $KUBE_NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+    # Create base64 encoded secrets
+    - $datasourceUrl = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("jdbc:postgresql://${GCP_PROJECT_ID}:europe-west4:user-service-db/db4"))
+    - $datasourceUsername = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("user6"))
+    - $datasourcePassword = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("password6"))
+    # Apply Kubernetes configurations
+    - (Get-Content ./user_service/kubernetes/secrets.yaml) -replace '\${BASE64_ENCODED_DATASOURCE_URL}', $datasourceUrl -replace '\${BASE64_ENCODED_DATASOURCE_USERNAME}', $datasourceUsername -replace '\${BASE64_ENCODED_DATASOURCE_PASSWORD}', $datasourcePassword | kubectl apply -f - -n $KUBE_NAMESPACE
+    # Apply service account and resources
+    - kubectl apply -f ./user_service/kubernetes/service-account.yaml -n $KUBE_NAMESPACE
+    - kubectl apply -f ./user_service/kubernetes/cloudsql-proxy.yaml -n $KUBE_NAMESPACE
+    - kubectl apply -f ./user_service/kubernetes/resource-quota.yaml -n $KUBE_NAMESPACE
+    # Replace variables in deployment.yaml and apply
+    - (Get-Content ./user_service/kubernetes/deployment.yaml) -replace '\${GCP_REGION}', $GCP_REGION -replace '\${GCP_PROJECT_ID}', $GCP_PROJECT_ID -replace '\${CI_COMMIT_SHA}', $CI_COMMIT_SHA | kubectl apply -f - -n $KUBE_NAMESPACE
+    - kubectl apply -f ./user_service/kubernetes/service.yaml -n $KUBE_NAMESPACE
+  dependencies:
+    - static_analysis
+    - build
+  only:
+    - main

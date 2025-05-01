@@ -1,0 +1,12 @@
+apiVersion: iam.cnrm.cloud.google.com/v1beta1
+kind: IAMPolicyMember
+metadata:
+  name: user-service-workload-identity
+  namespace: libraflow
+spec:
+  member: serviceAccount:libraflow.svc.id.goog[libraflow/user-service-account]
+  role: roles/iam.workloadIdentityUser
+  resourceRef:
+    apiVersion: resourcemanager.cnrm.cloud.google.com/v1beta1
+    kind: Project
+    external: projects/libraflow 

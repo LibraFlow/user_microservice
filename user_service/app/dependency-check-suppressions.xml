@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!-- Common Spring Boot false positives -->
+    <suppress>
+        <notes><![CDATA[
+        Suppress false positives for Spring Boot
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework\.boot/spring-boot.*@.*$</packageUrl>
+        <cpe>cpe:/a:pivotal_software:spring_boot</cpe>
+    </suppress>
+    
+    <!-- Suppress Tomcat embedded server -->
+    <suppress>
+        <notes><![CDATA[
+        Suppress false positives for embedded Tomcat
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.tomcat\.embed/.*@.*$</packageUrl>
+        <cpe>cpe:/a:apache:tomcat</cpe>
+    </suppress>
+    
+    <!-- Suppress Hibernate -->
+    <suppress>
+        <notes><![CDATA[
+        Suppress false positives for Hibernate
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.hibernate/.*@.*$</packageUrl>
+        <cpe>cpe:/a:hibernate:hibernate</cpe>
+    </suppress>
+</suppressions> 
