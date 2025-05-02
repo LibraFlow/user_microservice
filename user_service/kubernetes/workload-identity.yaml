@@ -1,12 +1,13 @@
 apiVersion: iam.cnrm.cloud.google.com/v1beta1
-kind: IAMPolicyMember
+kind: IAMServiceAccountBinding
 metadata:
-  name: user-service-workload-identity
-  namespace: libraflow
+  name: cloudsql-binding
+  namespace: user-service
 spec:
-  member: serviceAccount:libraflow.svc.id.goog[libraflow/user-service-account]
-  role: roles/iam.workloadIdentityUser
-  resourceRef:
-    apiVersion: resourcemanager.cnrm.cloud.google.com/v1beta1
-    kind: Project
-    external: projects/libraflow 
+  serviceAccountRef:
+    name: cloudsql-sa
+  roles:
+    - roles/cloudsql.client
+  gcpServiceAccountRef:
+    name: kubernetes-deploy
+    namespace: user-service
