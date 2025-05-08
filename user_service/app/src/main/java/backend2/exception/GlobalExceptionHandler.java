@@ -66,7 +66,12 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<Map<String, String>> handleInternalServerError(Exception ex) {
         Map<String, String> error = new HashMap<>();
-        error.put("message", "An unexpected error occurred. Please try again later.");
+        error.put("message", ex.getMessage());
+        StringBuilder sb = new StringBuilder();
+        for (StackTraceElement ste : ex.getStackTrace()) {
+            sb.append(ste.toString()).append("\n");
+        }
+        error.put("stackTrace", sb.toString());
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
