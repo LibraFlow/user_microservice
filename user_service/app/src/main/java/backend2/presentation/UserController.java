@@ -16,11 +16,18 @@ import java.nio.charset.StandardCharsets;
 
 import java.util.List;
 import java.util.Arrays;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.beans.factory.annotation.Value;
 
 @RestController
 @RequestMapping("api/v1/users")
 @RequiredArgsConstructor
 public class UserController {
+
+    @Value("${JWT_SECRET:12345678901234567890123456789012}")
+    private String jwtSecret;
 
     private final AddUserUseCase addUserUseCase;
     private final DeleteUserUseCase deleteUserUseCase;
@@ -35,6 +42,13 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Integer id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName(); // subject from JWT
+        // You need a way to get the user's ID from their username
+        UserDTO user = getUserUseCase.getUserByUsername(username);
+        if (user == null || !user.getId().equals(id)) {
+            return ResponseEntity.status(403).build();
+        }
         deleteUserUseCase.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
@@ -46,11 +60,24 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<List<UserDTO>> getAllUsers() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdminOrLibrarian = authentication.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .anyMatch(role -> role.equals("ROLE_ADMINISTRATOR") || role.equals("ROLE_LIBRARIAN"));
+        if (!isAdminOrLibrarian) {
+            return ResponseEntity.status(403).build();
+        }
         return ResponseEntity.ok(getAllUsersUseCase.getAllUsers());
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<UserDTO> updateUser(@PathVariable Integer id, @Valid @RequestBody UserDTO userDto) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        UserDTO user = getUserUseCase.getUserByUsername(username);
+        if (user == null || !user.getId().equals(id)) {
+            return ResponseEntity.status(403).build();
+        }
         return ResponseEntity.ok(updateUserUseCase.updateUser(id, userDto));
     }
 
@@ -63,12 +90,8 @@ public class UserController {
         if (user == null) {
             return ResponseEntity.status(401).body("Invalid credentials");
         }
-        String secret = System.getenv("JWT_SECRET");
-        if (secret == null || secret.length() < 32) {
-            secret = "12345678901234567890123456789012";
-        }
-        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        System.out.println("Secret bytes: " + Arrays.toString(secret.getBytes(StandardCharsets.UTF_8)));
+        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        System.out.println("Secret bytes: " + Arrays.toString(jwtSecret.getBytes(StandardCharsets.UTF_8)));
         long now = System.currentTimeMillis();
         String jwt = Jwts.builder()
             .setSubject(user.getUsername())

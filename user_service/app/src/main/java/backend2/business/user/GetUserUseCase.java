@@ -21,4 +21,10 @@ public class GetUserUseCase {
                 .map(userMapper::toDTO)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
     }
+
+    public UserDTO getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .map(userMapper::toDTO)
+                .orElse(null);
+    }
 }
