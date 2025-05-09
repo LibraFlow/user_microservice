@@ -95,6 +95,7 @@ public class UserController {
         long now = System.currentTimeMillis();
         String jwt = Jwts.builder()
             .setSubject(user.getUsername())
+            .claim("userId", user.getId())
             .claim("roles", user.getRoles())
             .setIssuedAt(new Date(now))
             .setExpiration(new Date(now + 3600_000)) // 1 hour
