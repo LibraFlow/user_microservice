@@ -11,6 +11,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.junit.jupiter.api.AfterEach;
+import java.util.Collections;
+import java.util.Collection;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -81,16 +89,22 @@ public class UserControllerTest {
     @Test
     void deleteUserTest() {
         // Arrange
-        Integer userId = 1;
-        doNothing().when(deleteUserUseCase).deleteUser(anyInt());
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn("testuser");
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        when(getUserUseCase.getUserByUsername("testuser")).thenReturn(testUserDTO);
+        doNothing().when(deleteUserUseCase).deleteUser(1);
 
         // Act
-        ResponseEntity<Void> response = userController.deleteUser(userId);
+        ResponseEntity<Void> response = userController.deleteUser(1);
 
         // Assert
         assertNotNull(response);
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(deleteUserUseCase, times(1)).deleteUser(userId);
+        verify(deleteUserUseCase, times(1)).deleteUser(1);
     }
 
     @Test
@@ -112,6 +126,13 @@ public class UserControllerTest {
     @Test
     void getAllUsersTest() {
         // Arrange
+        Authentication authentication = mock(Authentication.class);
+        Collection<? extends GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMINISTRATOR"));
+        when(authentication.getAuthorities()).thenReturn((Collection) authorities);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
         List<UserDTO> userList = Arrays.asList(testUserDTO);
         when(getAllUsersUseCase.getAllUsers()).thenReturn(userList);
 
@@ -128,7 +149,14 @@ public class UserControllerTest {
     @Test
     void updateUserTest() {
         // Arrange
-        when(updateUserUseCase.updateUser(anyInt(), any(UserDTO.class))).thenReturn(testUserDTO);
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn("testuser");
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        when(getUserUseCase.getUserByUsername("testuser")).thenReturn(testUserDTO);
+        when(updateUserUseCase.updateUser(1, testUserDTO)).thenReturn(testUserDTO);
 
         // Act
         ResponseEntity<UserDTO> response = userController.updateUser(1, testUserDTO);
@@ -137,6 +165,11 @@ public class UserControllerTest {
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(testUserDTO, response.getBody());
-        verify(updateUserUseCase, times(1)).updateUser(anyInt(), any(UserDTO.class));
+        verify(updateUserUseCase, times(1)).updateUser(1, testUserDTO);
+    }
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
     }
 } 
