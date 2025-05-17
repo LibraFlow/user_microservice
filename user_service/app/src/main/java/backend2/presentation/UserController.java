@@ -1,6 +1,8 @@
 package backend2.presentation;
 
 import backend2.domain.UserDTO;
+import backend2.domain.SubscriptionDTO;
+import backend2.domain.SubscriptionType;
 import backend2.business.user.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,8 @@ public class UserController {
     private final GetAllUsersUseCase getAllUsersUseCase;
     private final GetUserUseCase getUserUseCase;
     private final UpdateUserUseCase updateUserUseCase;
+    private final AddSubscriptionUseCase addSubscriptionUseCase;
+    private final GetUserSubscriptionsUseCase getUserSubscriptionsUseCase;
 
     @PostMapping
     public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserDTO userDto) {
@@ -103,5 +107,46 @@ public class UserController {
             .compact();
         System.out.println("JWT issued: " + jwt);
         return ResponseEntity.ok().body("Bearer " + jwt);
+    }
+
+    @PostMapping("/{userId}/subscriptions")
+    public ResponseEntity<SubscriptionDTO> addSubscription(
+            @PathVariable Integer userId,
+            @RequestParam SubscriptionType type) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        UserDTO user = getUserUseCase.getUserByUsername(username);
+        
+        if (user == null || !user.getId().equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        
+        return ResponseEntity.ok(addSubscriptionUseCase.addSubscription(userId, type));
+    }
+
+    @GetMapping("/{userId}/subscriptions")
+    public ResponseEntity<List<SubscriptionDTO>> getUserSubscriptions(@PathVariable Integer userId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        UserDTO user = getUserUseCase.getUserByUsername(username);
+        
+        if (user == null || !user.getId().equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        
+        return ResponseEntity.ok(getUserSubscriptionsUseCase.getUserSubscriptions(userId));
+    }
+
+    @GetMapping("/{userId}/subscriptions/active")
+    public ResponseEntity<List<SubscriptionDTO>> getActiveUserSubscriptions(@PathVariable Integer userId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        UserDTO user = getUserUseCase.getUserByUsername(username);
+        
+        if (user == null || !user.getId().equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        
+        return ResponseEntity.ok(getUserSubscriptionsUseCase.getActiveUserSubscriptions(userId));
     }
 }
