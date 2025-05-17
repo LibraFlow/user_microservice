@@ -3,6 +3,7 @@ package backend2.persistence.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import backend2.domain.SubscriptionType;
 
 @Entity
 @Table(name = "subscriptions")
