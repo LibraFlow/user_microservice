@@ -36,7 +36,7 @@ class UserMapperTest {
         testUserEntity = UserEntity.builder()
                 .id(1)
                 .username("testuser")
-                .pwd("password123".toCharArray())
+                .pwd("password123")
                 .email("test@example.com")
                 .address("123 Test St")
                 .phone("+1234567890")
@@ -48,7 +48,7 @@ class UserMapperTest {
         testUserDTO = UserDTO.builder()
                 .id(1)
                 .username("testuser")
-                .pwd("password123".toCharArray())
+                .pwd("password123")
                 .email("test@example.com")
                 .address("123 Test St")
                 .phone("+1234567890")
@@ -65,7 +65,7 @@ class UserMapperTest {
         assertNotNull(result);
         assertEquals(testUserEntity.getId(), result.getId());
         assertEquals(testUserEntity.getUsername(), result.getUsername());
-        assertArrayEquals(testUserEntity.getPwd(), result.getPwd());
+        assertEquals(testUserEntity.getPwd(), result.getPwd());
         assertEquals(testUserEntity.getEmail(), result.getEmail());
         assertEquals(testUserEntity.getAddress(), result.getAddress());
         assertEquals(testUserEntity.getPhone(), result.getPhone());
@@ -90,7 +90,7 @@ class UserMapperTest {
         assertNotNull(result);
         assertEquals(testUserDTO.getId(), result.getId());
         assertEquals(testUserDTO.getUsername(), result.getUsername());
-        assertArrayEquals(testUserDTO.getPwd(), result.getPwd());
+        assertEquals(testUserDTO.getPwd(), result.getPwd());
         assertEquals(testUserDTO.getEmail(), result.getEmail());
         assertEquals(testUserDTO.getAddress(), result.getAddress());
         assertEquals(testUserDTO.getPhone(), result.getPhone());
@@ -112,7 +112,7 @@ class UserMapperTest {
         // Arrange
         UserDTO newUserDTO = UserDTO.builder()
                 .username("newuser")
-                .pwd("newpassword".toCharArray())
+                .pwd("newpassword")
                 .email("new@example.com")
                 .address("456 New St")
                 .phone("+9876543210")

@@ -55,7 +55,7 @@ class UpdateUserUseCaseTest {
         existingUserEntity = UserEntity.builder()
                 .id(testUserId)
                 .username("oldusername")
-                .pwd("oldpassword".toCharArray())
+                .pwd("oldpassword")
                 .email("old@example.com")
                 .address("123 Old St")
                 .phone("+1234567890")
@@ -67,7 +67,7 @@ class UpdateUserUseCaseTest {
         updatedUserEntity = UserEntity.builder()
                 .id(testUserId)
                 .username("newusername")
-                .pwd("newpassword".toCharArray())
+                .pwd("newpassword")
                 .email("new@example.com")
                 .address("456 New St")
                 .phone("+0987654321")
@@ -79,7 +79,7 @@ class UpdateUserUseCaseTest {
         updatedUserDTO = UserDTO.builder()
                 .id(testUserId)
                 .username("newusername")
-                .pwd("newpassword".toCharArray())
+                .pwd("newpassword")
                 .email("new@example.com")
                 .address("456 New St")
                 .phone("+0987654321")
@@ -102,7 +102,7 @@ class UpdateUserUseCaseTest {
         assertNotNull(result);
         assertEquals(updatedUserDTO.getId(), result.getId());
         assertEquals(updatedUserDTO.getUsername(), result.getUsername());
-        assertArrayEquals(updatedUserDTO.getPwd(), result.getPwd());
+        assertEquals(updatedUserDTO.getPwd(), result.getPwd());
         assertEquals(updatedUserDTO.getEmail(), result.getEmail());
         assertEquals(updatedUserDTO.getAddress(), result.getAddress());
         assertEquals(updatedUserDTO.getPhone(), result.getPhone());

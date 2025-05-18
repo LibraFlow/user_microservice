@@ -32,7 +32,7 @@ class UserEntityTest {
         UserEntity builtEntity = UserEntity.builder()
                 .id(1)
                 .username("testuser")
-                .pwd("password123".toCharArray())
+                .pwd("password123")
                 .email("test@example.com")
                 .address("123 Test St")
                 .phone("+1234567890")
@@ -43,7 +43,7 @@ class UserEntityTest {
         assertNotNull(builtEntity);
         assertEquals(1, builtEntity.getId());
         assertEquals("testuser", builtEntity.getUsername());
-        assertArrayEquals("password123".toCharArray(), builtEntity.getPwd());
+        assertEquals("password123", builtEntity.getPwd());
         assertEquals("test@example.com", builtEntity.getEmail());
         assertEquals("123 Test St", builtEntity.getAddress());
         assertEquals("+1234567890", builtEntity.getPhone());
@@ -59,7 +59,7 @@ class UserEntityTest {
 
         userEntity.setId(1);
         userEntity.setUsername("testuser");
-        userEntity.setPwd("password123".toCharArray());
+        userEntity.setPwd("password123");
         userEntity.setEmail("test@example.com");
         userEntity.setAddress("123 Test St");
         userEntity.setPhone("+1234567890");
@@ -68,7 +68,7 @@ class UserEntityTest {
 
         assertEquals(1, userEntity.getId());
         assertEquals("testuser", userEntity.getUsername());
-        assertArrayEquals("password123".toCharArray(), userEntity.getPwd());
+        assertEquals("password123", userEntity.getPwd());
         assertEquals("test@example.com", userEntity.getEmail());
         assertEquals("123 Test St", userEntity.getAddress());
         assertEquals("+1234567890", userEntity.getPhone());
@@ -85,7 +85,7 @@ class UserEntityTest {
         UserEntity entity1 = UserEntity.builder()
                 .id(1)
                 .username("testuser")
-                .pwd("password123".toCharArray())
+                .pwd("password123")
                 .email("test@example.com")
                 .address("123 Test St")
                 .phone("+1234567890")
@@ -96,7 +96,7 @@ class UserEntityTest {
         UserEntity entity2 = UserEntity.builder()
                 .id(1)
                 .username("testuser")
-                .pwd("password123".toCharArray())
+                .pwd("password123")
                 .email("test@example.com")
                 .address("123 Test St")
                 .phone("+1234567890")
@@ -117,7 +117,7 @@ class UserEntityTest {
         UserEntity entity = UserEntity.builder()
                 .id(1)
                 .username("testuser")
-                .pwd("password123".toCharArray())
+                .pwd("password123")
                 .email("test@example.com")
                 .address("123 Test St")
                 .phone("+1234567890")
@@ -148,12 +148,12 @@ class UserEntityTest {
         Set<Role> roles = new HashSet<>();
         roles.add(Role.CUSTOMER);
         
-        UserEntity entity = new UserEntity(1, "testuser", "password123".toCharArray(), 
+        UserEntity entity = new UserEntity(1, "testuser", "password123", 
                 "test@example.com", "123 Test St", "+1234567890", roles, testDate);
 
         assertEquals(1, entity.getId());
         assertEquals("testuser", entity.getUsername());
-        assertArrayEquals("password123".toCharArray(), entity.getPwd());
+        assertEquals("password123", entity.getPwd());
         assertEquals("test@example.com", entity.getEmail());
         assertEquals("123 Test St", entity.getAddress());
         assertEquals("+1234567890", entity.getPhone());
@@ -171,7 +171,7 @@ class UserEntityTest {
         UserEntity entity = UserEntity.builder()
                 .id(1)
                 .username("testuser")
-                .pwd("password123".toCharArray())
+                .pwd("password123")
                 .email("test@example.com")
                 .address("123 Test St")
                 .phone("+1234567890")
@@ -193,7 +193,7 @@ class UserEntityTest {
         UserEntity entity = UserEntity.builder()
                 .id(1)
                 .username("admin")
-                .pwd("adminpass".toCharArray())
+                .pwd("adminpass")
                 .email("admin@example.com")
                 .address("Admin St")
                 .phone("+1234567890")

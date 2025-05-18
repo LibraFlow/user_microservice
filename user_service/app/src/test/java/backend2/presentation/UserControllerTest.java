@@ -63,7 +63,7 @@ public class UserControllerTest {
         testUserDTO = UserDTO.builder()
                 .id(1)
                 .username("testuser")
-                .pwd("password123".toCharArray())
+                .pwd("password123")
                 .email("test@example.com")
                 .address("123 Test St")
                 .phone("+1234567890")

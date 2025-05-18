@@ -17,7 +17,7 @@ class UserDTOTest {
         UserDTO userDTO = UserDTO.builder()
                 .id(1)
                 .username("testuser")
-                .pwd("password123".toCharArray())
+                .pwd("password123")
                 .email("test@example.com")
                 .address("123 Test St")
                 .phone("123-456-7890")
@@ -28,7 +28,7 @@ class UserDTOTest {
         assertNotNull(userDTO);
         assertEquals(1, userDTO.getId());
         assertEquals("testuser", userDTO.getUsername());
-        assertArrayEquals("password123".toCharArray(), userDTO.getPwd());
+        assertEquals("password123", userDTO.getPwd());
         assertEquals("test@example.com", userDTO.getEmail());
         assertEquals("123 Test St", userDTO.getAddress());
         assertEquals("123-456-7890", userDTO.getPhone());
@@ -41,14 +41,14 @@ class UserDTOTest {
         Set<Role> roles = new HashSet<>();
         roles.add(Role.LIBRARIAN);
         
-        UserDTO userDTO = new UserDTO(1, "testuser", "password123".toCharArray(), 
+        UserDTO userDTO = new UserDTO(1, "testuser", "password123", 
                 "test@example.com", "123 Test St", "123-456-7890", roles);
 
         // Assert
         assertNotNull(userDTO);
         assertEquals(1, userDTO.getId());
         assertEquals("testuser", userDTO.getUsername());
-        assertArrayEquals("password123".toCharArray(), userDTO.getPwd());
+        assertEquals("password123", userDTO.getPwd());
         assertEquals("test@example.com", userDTO.getEmail());
         assertEquals("123 Test St", userDTO.getAddress());
         assertEquals("123-456-7890", userDTO.getPhone());
@@ -70,7 +70,7 @@ class UserDTOTest {
         UserDTO userDTO1 = UserDTO.builder()
                 .id(1)
                 .username("testuser")
-                .pwd("password123".toCharArray())
+                .pwd("password123")
                 .email("test@example.com")
                 .address("123 Test St")
                 .phone("123-456-7890")
@@ -80,7 +80,7 @@ class UserDTOTest {
         UserDTO userDTO2 = UserDTO.builder()
                 .id(1)
                 .username("testuser")
-                .pwd("password123".toCharArray())
+                .pwd("password123")
                 .email("test@example.com")
                 .address("123 Test St")
                 .phone("123-456-7890")
@@ -90,7 +90,7 @@ class UserDTOTest {
         UserDTO userDTO3 = UserDTO.builder()
                 .id(2)
                 .username("differentuser")
-                .pwd("differentpass".toCharArray())
+                .pwd("differentpass")
                 .email("different@example.com")
                 .address("456 Different St")
                 .phone("987-654-3210")
@@ -113,7 +113,7 @@ class UserDTOTest {
         UserDTO userDTO = UserDTO.builder()
                 .id(1)
                 .username("testuser")
-                .pwd("password123".toCharArray())
+                .pwd("password123")
                 .email("test@example.com")
                 .address("123 Test St")
                 .phone("123-456-7890")
@@ -143,7 +143,7 @@ class UserDTOTest {
         // Act
         userDTO.setId(1);
         userDTO.setUsername("testuser");
-        userDTO.setPwd("password123".toCharArray());
+        userDTO.setPwd("password123");
         userDTO.setEmail("test@example.com");
         userDTO.setAddress("123 Test St");
         userDTO.setPhone("123-456-7890");
@@ -152,7 +152,7 @@ class UserDTOTest {
         // Assert
         assertEquals(1, userDTO.getId());
         assertEquals("testuser", userDTO.getUsername());
-        assertArrayEquals("password123".toCharArray(), userDTO.getPwd());
+        assertEquals("password123", userDTO.getPwd());
         assertEquals("test@example.com", userDTO.getEmail());
         assertEquals("123 Test St", userDTO.getAddress());
         assertEquals("123-456-7890", userDTO.getPhone());

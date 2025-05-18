@@ -50,7 +50,7 @@ class GetUserUseCaseTest {
         testUserEntity = UserEntity.builder()
                 .id(testUserId)
                 .username("testuser")
-                .pwd("password123".toCharArray())
+                .pwd("password123")
                 .email("test@example.com")
                 .address("123 Test St")
                 .phone("+1234567890")
@@ -62,7 +62,7 @@ class GetUserUseCaseTest {
         testUserDTO = UserDTO.builder()
                 .id(testUserId)
                 .username("testuser")
-                .pwd("password123".toCharArray())
+                .pwd("password123")
                 .email("test@example.com")
                 .address("123 Test St")
                 .phone("+1234567890")
@@ -83,7 +83,7 @@ class GetUserUseCaseTest {
         assertNotNull(result);
         assertEquals(testUserDTO.getId(), result.getId());
         assertEquals(testUserDTO.getUsername(), result.getUsername());
-        assertArrayEquals(testUserDTO.getPwd(), result.getPwd());
+        assertEquals(testUserDTO.getPwd(), result.getPwd());
         assertEquals(testUserDTO.getEmail(), result.getEmail());
         assertEquals(testUserDTO.getAddress(), result.getAddress());
         assertEquals(testUserDTO.getPhone(), result.getPhone());
