@@ -3,6 +3,7 @@ package backend2.domain;
 import lombok.*;
 import jakarta.validation.constraints.*;
 import java.util.Set;
+import java.time.LocalDate;
 
 @Data
 @Builder
@@ -31,4 +32,6 @@ public class UserDTO {
 
     @NotNull
     private Set<Role> roles;
+
+    private boolean deleted;
 }

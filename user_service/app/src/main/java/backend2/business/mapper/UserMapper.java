@@ -29,6 +29,7 @@ public class UserMapper {
                 .address(encryptionService.decrypt(entity.getAddress()))
                 .phone(encryptionService.decrypt(entity.getPhone()))
                 .roles(entity.getRoles())
+                .deleted(entity.isDeleted())
                 .build();
     }
 
@@ -45,7 +46,8 @@ public class UserMapper {
                 .address(encryptionService.encrypt(dto.getAddress()))
                 .phone(encryptionService.encrypt(dto.getPhone()))
                 .roles(dto.getRoles())
-                .createdAt(dto.getId() == null ? LocalDate.now() : null) // Set createdAt only for new entities
+                .createdAt(dto.getId() == null ? LocalDate.now() : null)
+                .deleted(dto.isDeleted())
                 .build();
     }
 }

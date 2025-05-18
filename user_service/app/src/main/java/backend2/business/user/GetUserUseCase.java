@@ -3,6 +3,7 @@ package backend2.business.user;
 import backend2.domain.UserDTO;
 import backend2.persistence.UserRepository;
 import backend2.business.mapper.UserMapper;
+import backend2.exception.ResourceNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,12 +20,18 @@ public class GetUserUseCase {
     public UserDTO getUser(Integer id) {
         return userRepository.findById(id)
                 .map(userMapper::toDTO)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
     }
 
     public UserDTO getUserByUsername(String username) {
         return userRepository.findByUsername(username)
                 .map(userMapper::toDTO)
-                .orElse(null);
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
+    }
+
+    public UserDTO getUserByUsernameIfNotDeleted(String username) {
+        return userRepository.findByUsernameAndDeletedFalse(username)
+                .map(userMapper::toDTO)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found or is deleted: " + username));
     }
 }

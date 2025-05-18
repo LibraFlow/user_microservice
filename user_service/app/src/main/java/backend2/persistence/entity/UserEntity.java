@@ -48,4 +48,11 @@ public class UserEntity {
     @PastOrPresent
     @Column(nullable = false)
     private LocalDate createdAt;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean deleted = false;
+
+    @Column(nullable = true)
+    private LocalDate deletedAt;
 }

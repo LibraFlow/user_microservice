@@ -23,6 +23,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.beans.factory.annotation.Value;
 import backend2.security.PasswordEncoderService;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 @RestController
 @RequestMapping("api/v1/users")
@@ -49,10 +50,9 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Integer id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName(); // subject from JWT
-        // You need a way to get the user's ID from their username
-        UserDTO user = getUserUseCase.getUserByUsername(username);
-        if (user == null || !user.getId().equals(id)) {
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        Integer userId = ((Number) jwt.getClaim("userId")).intValue();
+        if (!userId.equals(id)) {
             return ResponseEntity.status(403).build();
         }
         deleteUserUseCase.deleteUser(id);
@@ -61,6 +61,15 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUser(@PathVariable Integer id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        Integer userId = ((Number) jwt.getClaim("userId")).intValue();
+        boolean isAdminOrLibrarian = authentication.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .anyMatch(role -> role.equals("ROLE_ADMINISTRATOR") || role.equals("ROLE_LIBRARIAN"));
+        if (!isAdminOrLibrarian && !userId.equals(id)) {
+            return ResponseEntity.status(403).build();
+        }
         return ResponseEntity.ok(getUserUseCase.getUser(id));
     }
 
@@ -79,36 +88,33 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<UserDTO> updateUser(@PathVariable Integer id, @Valid @RequestBody UserDTO userDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        UserDTO user = getUserUseCase.getUserByUsername(username);
-        if (user == null || !user.getId().equals(id)) {
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        Integer userId = ((Number) jwt.getClaim("userId")).intValue();
+        boolean isAdmin = authentication.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .anyMatch(role -> role.equals("ROLE_ADMINISTRATOR"));
+        if (!userId.equals(id) && !isAdmin) {
             return ResponseEntity.status(403).build();
         }
-        return ResponseEntity.ok(updateUserUseCase.updateUser(id, userDto));
+        return ResponseEntity.ok(updateUserUseCase.updateUser(id, userDto, isAdmin));
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserDTO loginDto) {
-        // Authenticate user (pseudo, replace with real check)
-        UserDTO user = getAllUsersUseCase.getAllUsers().stream()
-            .filter(u -> u.getUsername().equals(loginDto.getUsername()))
-            .findFirst().orElse(null);
-
+        UserDTO user = getUserUseCase.getUserByUsernameIfNotDeleted(loginDto.getUsername());
         if (user == null || !passwordEncoderService.matches(loginDto.getPwd(), user.getPwd())) {
             return ResponseEntity.status(401).body("Invalid credentials");
         }
         SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-        System.out.println("Secret bytes: " + Arrays.toString(jwtSecret.getBytes(StandardCharsets.UTF_8)));
         long now = System.currentTimeMillis();
         String jwt = Jwts.builder()
             .setSubject(user.getUsername())
             .claim("userId", user.getId())
             .claim("roles", user.getRoles())
             .setIssuedAt(new Date(now))
-            .setExpiration(new Date(now + 3600_000)) // 1 hour
+            .setExpiration(new Date(now + 3600_000))
             .signWith(key, SignatureAlgorithm.HS256)
             .compact();
-        System.out.println("JWT issued: " + jwt);
         return ResponseEntity.ok().body("Bearer " + jwt);
     }
 
@@ -117,39 +123,33 @@ public class UserController {
             @PathVariable Integer userId,
             @RequestParam SubscriptionType type) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        UserDTO user = getUserUseCase.getUserByUsername(username);
-        
-        if (user == null || !user.getId().equals(userId)) {
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        Integer authUserId = ((Number) jwt.getClaim("userId")).intValue();
+        if (!authUserId.equals(userId)) {
             return ResponseEntity.status(403).build();
         }
-        
         return ResponseEntity.ok(addSubscriptionUseCase.addSubscription(userId, type));
     }
 
     @GetMapping("/{userId}/subscriptions")
     public ResponseEntity<List<SubscriptionDTO>> getUserSubscriptions(@PathVariable Integer userId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        UserDTO user = getUserUseCase.getUserByUsername(username);
-        
-        if (user == null || !user.getId().equals(userId)) {
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        Integer authUserId = ((Number) jwt.getClaim("userId")).intValue();
+        if (!authUserId.equals(userId)) {
             return ResponseEntity.status(403).build();
         }
-        
         return ResponseEntity.ok(getUserSubscriptionsUseCase.getUserSubscriptions(userId));
     }
 
     @GetMapping("/{userId}/subscriptions/active")
     public ResponseEntity<List<SubscriptionDTO>> getActiveUserSubscriptions(@PathVariable Integer userId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        UserDTO user = getUserUseCase.getUserByUsername(username);
-        
-        if (user == null || !user.getId().equals(userId)) {
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        Integer authUserId = ((Number) jwt.getClaim("userId")).intValue();
+        if (!authUserId.equals(userId)) {
             return ResponseEntity.status(403).build();
         }
-        
         return ResponseEntity.ok(getUserSubscriptionsUseCase.getActiveUserSubscriptions(userId));
     }
 }
