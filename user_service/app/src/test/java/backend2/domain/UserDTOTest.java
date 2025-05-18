@@ -42,7 +42,7 @@ class UserDTOTest {
         roles.add(Role.LIBRARIAN);
         
         UserDTO userDTO = new UserDTO(1, "testuser", "password123", 
-                "test@example.com", "123 Test St", "123-456-7890", roles);
+                "test@example.com", "123 Test St", "123-456-7890", roles, false);
 
         // Assert
         assertNotNull(userDTO);

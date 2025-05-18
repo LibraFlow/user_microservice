@@ -80,9 +80,9 @@ class AddUserUseCaseTest {
     @Test
     void createUser_Success() {
         // Arrange
-        when(userMapper.toEntity(any(UserDTO.class))).thenReturn(testUserEntity);
-        when(userRepository.save(any(UserEntity.class))).thenReturn(savedUserEntity);
-        when(userMapper.toDTO(any(UserEntity.class))).thenReturn(testUserDTO);
+        when(userMapper.toEntity(testUserDTO)).thenReturn(testUserEntity);
+        when(userRepository.save(testUserEntity)).thenReturn(testUserEntity);
+        when(userMapper.toDTO(testUserEntity)).thenReturn(testUserDTO);
 
         // Act
         UserDTO result = addUserUseCase.createUser(testUserDTO);
@@ -97,28 +97,25 @@ class AddUserUseCaseTest {
         assertEquals(testUserDTO.getPhone(), result.getPhone());
         assertEquals(testUserDTO.getRoles(), result.getRoles());
 
-        // Verify interactions
+        // Verify
         verify(userMapper, times(1)).toEntity(testUserDTO);
         verify(userRepository, times(1)).save(testUserEntity);
-        verify(userMapper, times(1)).toDTO(savedUserEntity);
+        verify(userMapper, times(1)).toDTO(testUserEntity);
     }
 
     @Test
     void createUser_WithNullInput_ShouldReturnNull() {
         // Arrange
         when(userMapper.toEntity(null)).thenReturn(null);
-        when(userRepository.save(null)).thenReturn(null);
-        when(userMapper.toDTO(null)).thenReturn(null);
 
-        // Act
-        UserDTO result = addUserUseCase.createUser(null);
+        // Act & Assert
+        assertThrows(NullPointerException.class, () -> {
+            addUserUseCase.createUser(null);
+        });
 
-        // Assert
-        assertNull(result);
-
-        // Verify interactions
+        // Verify
         verify(userMapper, times(1)).toEntity(null);
-        verify(userRepository, times(1)).save(null);
-        verify(userMapper, times(1)).toDTO(null);
+        verify(userRepository, never()).save(any());
+        verify(userMapper, never()).toDTO(any());
     }
 } 

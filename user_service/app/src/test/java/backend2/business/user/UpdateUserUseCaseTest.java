@@ -96,7 +96,7 @@ class UpdateUserUseCaseTest {
         when(userMapper.toDTO(updatedUserEntity)).thenReturn(updatedUserDTO);
 
         // Act
-        UserDTO result = updateUserUseCase.updateUser(testUserId, updatedUserDTO);
+        UserDTO result = updateUserUseCase.updateUser(testUserId, updatedUserDTO, false);
 
         // Assert
         assertNotNull(result);
@@ -122,7 +122,7 @@ class UpdateUserUseCaseTest {
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            updateUserUseCase.updateUser(testUserId, updatedUserDTO);
+            updateUserUseCase.updateUser(testUserId, updatedUserDTO, false);
         });
 
         assertEquals("User not found with id: " + testUserId, exception.getMessage());

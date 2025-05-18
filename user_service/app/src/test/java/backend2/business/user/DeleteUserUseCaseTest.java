@@ -1,12 +1,23 @@
 package backend2.business.user;
 
+import backend2.domain.UserDTO;
+import backend2.domain.Role;
 import backend2.persistence.UserRepository;
+import backend2.persistence.entity.UserEntity;
+import backend2.business.mapper.UserMapper;
+import backend2.exception.ResourceNotFoundException;
+import backend2.security.EncryptionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -17,43 +28,74 @@ class DeleteUserUseCaseTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private EncryptionService encryptionService;
+
     @InjectMocks
     private DeleteUserUseCase deleteUserUseCase;
 
+    private UserEntity testUserEntity;
+    private UserDTO testUserDTO;
     private Integer testUserId;
+    private Set<Role> testRoles;
 
     @BeforeEach
     void setUp() {
         testUserId = 1;
+        testRoles = new HashSet<>();
+        testRoles.add(Role.CUSTOMER);
+        
+        testUserEntity = UserEntity.builder()
+                .id(testUserId)
+                .username("testuser")
+                .pwd("password123")
+                .email("test@example.com")
+                .address("123 Test St")
+                .phone("+1234567890")
+                .roles(testRoles)
+                .build();
+                
+        testUserDTO = UserDTO.builder()
+                .id(testUserId)
+                .username("testuser")
+                .pwd("password123")
+                .email("test@example.com")
+                .address("123 Test St")
+                .phone("+1234567890")
+                .roles(testRoles)
+                .build();
     }
 
     @Test
     void deleteUser_Success() {
         // Arrange
-        when(userRepository.existsById(testUserId)).thenReturn(true);
-        doNothing().when(userRepository).deleteById(testUserId);
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUserEntity));
+        when(encryptionService.encrypt(anyString())).thenAnswer(i -> i.getArgument(0));
+        when(userRepository.save(any(UserEntity.class))).thenReturn(testUserEntity);
 
         // Act
-        Void result = deleteUserUseCase.deleteUser(testUserId);
+        deleteUserUseCase.deleteUser(testUserId);
 
-        // Assert
-        assertNull(result);
-        verify(userRepository, times(1)).existsById(testUserId);
-        verify(userRepository, times(1)).deleteById(testUserId);
+        // Verify
+        verify(userRepository, times(1)).findById(testUserId);
+        verify(encryptionService, times(3)).encrypt(anyString());
+        verify(userRepository, times(1)).save(any(UserEntity.class));
     }
 
     @Test
     void deleteUser_UserNotFound_ShouldThrowException() {
         // Arrange
-        when(userRepository.existsById(testUserId)).thenReturn(false);
+        when(userRepository.findById(testUserId)).thenReturn(Optional.empty());
 
         // Act & Assert
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
             deleteUserUseCase.deleteUser(testUserId);
         });
 
         assertEquals("User not found with id: " + testUserId, exception.getMessage());
-        verify(userRepository, times(1)).existsById(testUserId);
-        verify(userRepository, never()).deleteById(any());
+
+        // Verify
+        verify(userRepository, times(1)).findById(testUserId);
+        verify(userRepository, never()).save(any());
     }
 } 

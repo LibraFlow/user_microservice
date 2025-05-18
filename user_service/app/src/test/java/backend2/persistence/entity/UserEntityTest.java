@@ -149,7 +149,7 @@ class UserEntityTest {
         roles.add(Role.CUSTOMER);
         
         UserEntity entity = new UserEntity(1, "testuser", "password123", 
-                "test@example.com", "123 Test St", "+1234567890", roles, testDate);
+                "test@example.com", "123 Test St", "+1234567890", roles, testDate, false, null);
 
         assertEquals(1, entity.getId());
         assertEquals("testuser", entity.getUsername());

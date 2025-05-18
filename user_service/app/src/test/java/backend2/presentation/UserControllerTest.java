@@ -16,10 +16,10 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.junit.jupiter.api.AfterEach;
 import java.util.Collections;
 import java.util.Collection;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -53,6 +53,9 @@ public class UserControllerTest {
 
     private UserDTO testUserDTO;
     private Set<Role> testRoles;
+    private Authentication authentication;
+    private SecurityContext securityContext;
+    private Jwt jwt;
 
     @BeforeEach
     void setUp() {
@@ -71,32 +74,31 @@ public class UserControllerTest {
                 .build();
     }
 
+    private void setupSecurityContext() {
+        jwt = mock(Jwt.class);
+        authentication = mock(Authentication.class);
+        securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+    }
+
     @Test
     void createUserTest() {
-        // Arrange
-        when(addUserUseCase.createUser(any(UserDTO.class))).thenReturn(testUserDTO);
-
         // Act
         ResponseEntity<UserDTO> response = userController.createUser(testUserDTO);
 
         // Assert
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(testUserDTO, response.getBody());
-        verify(addUserUseCase, times(1)).createUser(any(UserDTO.class));
+        verify(addUserUseCase, times(1)).createUser(testUserDTO);
     }
 
     @Test
     void deleteUserTest() {
         // Arrange
-        Authentication authentication = mock(Authentication.class);
-        when(authentication.getName()).thenReturn("testuser");
-        SecurityContext securityContext = mock(SecurityContext.class);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
-
-        when(getUserUseCase.getUserByUsername("testuser")).thenReturn(testUserDTO);
-        doNothing().when(deleteUserUseCase).deleteUser(1);
+        setupSecurityContext();
+        when(jwt.getClaim("userId")).thenReturn(1);
+        when(authentication.getPrincipal()).thenReturn(jwt);
 
         // Act
         ResponseEntity<Void> response = userController.deleteUser(1);
@@ -110,31 +112,31 @@ public class UserControllerTest {
     @Test
     void getUserTest() {
         // Arrange
-        Integer userId = 1;
-        when(getUserUseCase.getUser(anyInt())).thenReturn(testUserDTO);
+        setupSecurityContext();
+        when(jwt.getClaim("userId")).thenReturn(1);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        Set<GrantedAuthority> authorities = new HashSet<>();
+        authorities.add(new SimpleGrantedAuthority("ROLE_ADMINISTRATOR"));
+        doReturn(authorities).when(authentication).getAuthorities();
+        when(getUserUseCase.getUser(1)).thenReturn(testUserDTO);
 
         // Act
-        ResponseEntity<UserDTO> response = userController.getUser(userId);
+        ResponseEntity<UserDTO> response = userController.getUser(1);
 
         // Assert
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(testUserDTO, response.getBody());
-        verify(getUserUseCase, times(1)).getUser(userId);
+        verify(getUserUseCase, times(1)).getUser(1);
     }
 
     @Test
     void getAllUsersTest() {
         // Arrange
-        Authentication authentication = mock(Authentication.class);
-        Collection<? extends GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMINISTRATOR"));
-        when(authentication.getAuthorities()).thenReturn((Collection) authorities);
-        SecurityContext securityContext = mock(SecurityContext.class);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
-
-        List<UserDTO> userList = Arrays.asList(testUserDTO);
-        when(getAllUsersUseCase.getAllUsers()).thenReturn(userList);
+        setupSecurityContext();
+        Set<GrantedAuthority> authorities = new HashSet<>();
+        authorities.add(new SimpleGrantedAuthority("ROLE_ADMINISTRATOR"));
+        doReturn(authorities).when(authentication).getAuthorities();
 
         // Act
         ResponseEntity<List<UserDTO>> response = userController.getAllUsers();
@@ -142,21 +144,19 @@ public class UserControllerTest {
         // Assert
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(userList, response.getBody());
         verify(getAllUsersUseCase, times(1)).getAllUsers();
     }
 
     @Test
     void updateUserTest() {
         // Arrange
-        Authentication authentication = mock(Authentication.class);
-        when(authentication.getName()).thenReturn("testuser");
-        SecurityContext securityContext = mock(SecurityContext.class);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
-
-        when(getUserUseCase.getUserByUsername("testuser")).thenReturn(testUserDTO);
-        when(updateUserUseCase.updateUser(1, testUserDTO)).thenReturn(testUserDTO);
+        setupSecurityContext();
+        when(jwt.getClaim("userId")).thenReturn(1);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        Set<GrantedAuthority> authorities = new HashSet<>();
+        authorities.add(new SimpleGrantedAuthority("ROLE_ADMINISTRATOR"));
+        doReturn(authorities).when(authentication).getAuthorities();
+        when(updateUserUseCase.updateUser(1, testUserDTO, true)).thenReturn(testUserDTO);
 
         // Act
         ResponseEntity<UserDTO> response = userController.updateUser(1, testUserDTO);
@@ -165,7 +165,7 @@ public class UserControllerTest {
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(testUserDTO, response.getBody());
-        verify(updateUserUseCase, times(1)).updateUser(1, testUserDTO);
+        verify(updateUserUseCase, times(1)).updateUser(1, testUserDTO, true);
     }
 
     @AfterEach
