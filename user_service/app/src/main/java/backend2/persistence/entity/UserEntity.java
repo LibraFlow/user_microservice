@@ -24,7 +24,7 @@ public class UserEntity {
     private String username;
 
     @NotBlank(message = "Password cannot be blank")
-    private char[] pwd;
+    private String pwd;
 
     @NotBlank(message = "Email cannot be blank")
     @Email(message = "Email should be valid")

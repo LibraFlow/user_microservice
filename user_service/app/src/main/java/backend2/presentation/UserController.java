@@ -22,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.beans.factory.annotation.Value;
+import backend2.security.PasswordEncoderService;
 
 @RestController
 @RequestMapping("api/v1/users")
@@ -38,6 +39,7 @@ public class UserController {
     private final UpdateUserUseCase updateUserUseCase;
     private final AddSubscriptionUseCase addSubscriptionUseCase;
     private final GetUserSubscriptionsUseCase getUserSubscriptionsUseCase;
+    private final PasswordEncoderService passwordEncoderService;
 
     @PostMapping
     public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserDTO userDto) {
@@ -89,9 +91,10 @@ public class UserController {
     public ResponseEntity<?> login(@RequestBody UserDTO loginDto) {
         // Authenticate user (pseudo, replace with real check)
         UserDTO user = getAllUsersUseCase.getAllUsers().stream()
-            .filter(u -> u.getUsername().equals(loginDto.getUsername()) && String.valueOf(u.getPwd()).equals(String.valueOf(loginDto.getPwd())))
+            .filter(u -> u.getUsername().equals(loginDto.getUsername()))
             .findFirst().orElse(null);
-        if (user == null) {
+
+        if (user == null || !passwordEncoderService.matches(loginDto.getPwd(), user.getPwd())) {
             return ResponseEntity.status(401).body("Invalid credentials");
         }
         SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));

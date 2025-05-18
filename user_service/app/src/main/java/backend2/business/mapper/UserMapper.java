@@ -2,6 +2,8 @@ package backend2.business.mapper;
 
 import backend2.domain.UserDTO;
 import backend2.persistence.entity.UserEntity;
+import backend2.security.EncryptionService;
+import backend2.security.PasswordEncoderService;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,8 @@ import java.time.LocalDate;
 @Component
 @RequiredArgsConstructor
 public class UserMapper {
+    private final EncryptionService encryptionService;
+    private final PasswordEncoderService passwordEncoderService;
 
     public UserDTO toDTO(UserEntity entity) {
         if (entity == null) {
@@ -21,9 +25,9 @@ public class UserMapper {
                 .id(entity.getId())
                 .username(entity.getUsername())
                 .pwd(entity.getPwd())
-                .email(entity.getEmail())
-                .address(entity.getAddress())
-                .phone(entity.getPhone())
+                .email(encryptionService.decrypt(entity.getEmail()))
+                .address(encryptionService.decrypt(entity.getAddress()))
+                .phone(encryptionService.decrypt(entity.getPhone()))
                 .roles(entity.getRoles())
                 .build();
     }
@@ -36,10 +40,10 @@ public class UserMapper {
         return UserEntity.builder()
                 .id(dto.getId())
                 .username(dto.getUsername())
-                .pwd(dto.getPwd())
-                .email(dto.getEmail())
-                .address(dto.getAddress())
-                .phone(dto.getPhone())
+                .pwd(passwordEncoderService.encode(dto.getPwd()))
+                .email(encryptionService.encrypt(dto.getEmail()))
+                .address(encryptionService.encrypt(dto.getAddress()))
+                .phone(encryptionService.encrypt(dto.getPhone()))
                 .roles(dto.getRoles())
                 .createdAt(dto.getId() == null ? LocalDate.now() : null) // Set createdAt only for new entities
                 .build();

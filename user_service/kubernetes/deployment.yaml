@@ -35,6 +35,11 @@ spec:
             secretKeyRef:
               name: user-service-secrets
               key: spring.datasource.password
+        - name: ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: user-service-secrets
+              key: encryption.key
         resources:
           requests:
             cpu: "250m"
