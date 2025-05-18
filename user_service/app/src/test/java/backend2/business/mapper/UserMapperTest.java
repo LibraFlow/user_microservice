@@ -3,11 +3,14 @@ package backend2.business.mapper;
 import backend2.domain.Role;
 import backend2.domain.UserDTO;
 import backend2.persistence.entity.UserEntity;
+import backend2.security.EncryptionService;
+import backend2.security.PasswordEncoderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -18,7 +21,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 class UserMapperTest {
 
-    @InjectMocks
+    @Mock
+    private EncryptionService encryptionService;
+    @Mock
+    private PasswordEncoderService passwordEncoderService;
+
     private UserMapper userMapper;
 
     private UserEntity testUserEntity;
@@ -27,6 +34,14 @@ class UserMapperTest {
 
     @BeforeEach
     void setUp() {
+        // Mock encryptionService to return the input value for encrypt/decrypt
+        when(encryptionService.encrypt(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(encryptionService.decrypt(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        // Mock passwordEncoderService to return the input value for encode, and always match
+        when(passwordEncoderService.encode(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(passwordEncoderService.matches(anyString(), anyString())).thenReturn(true);
+        userMapper = new UserMapper(encryptionService, passwordEncoderService);
+
         // Initialize test roles
         testRoles = new HashSet<>();
         testRoles.add(Role.CUSTOMER);
