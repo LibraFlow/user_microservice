@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -22,8 +23,9 @@ public class DataRetentionService {
     @Scheduled(cron = "0 0 0 * * ?") // Run at midnight every day
     @Transactional
     public void cleanupExpiredData() {
-        LocalDate userRetentionDate = LocalDate.now().minusDays(RetentionConfig.DELETED_USER_RETENTION_DAYS);
-        LocalDate subscriptionRetentionDate = LocalDate.now().minusDays(RetentionConfig.SUBSCRIPTION_HISTORY_RETENTION_DAYS);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate userRetentionDate = now.minusDays(RetentionConfig.DELETED_USER_RETENTION_DAYS).toLocalDate();
+        LocalDateTime subscriptionRetentionDate = now.minusDays(RetentionConfig.SUBSCRIPTION_HISTORY_RETENTION_DAYS);
 
         // Clean up expired deleted users
         List<UserEntity> expiredDeletedUsers = userRepository.findByDeletedTrueAndDeletedAtBefore(userRetentionDate);
