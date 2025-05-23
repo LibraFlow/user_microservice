@@ -5,7 +5,7 @@ metadata:
   labels:
     app: user-service
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: user-service
@@ -42,23 +42,23 @@ spec:
               key: encryption.key
         resources:
           requests:
-            cpu: "250m"
-            memory: "256Mi"
-          limits:
             cpu: "500m"
             memory: "512Mi"
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
         readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8087
+          initialDelaySeconds: 20
+          periodSeconds: 5
+        livenessProbe:
           httpGet:
             path: /actuator/health
             port: 8087
           initialDelaySeconds: 30
           periodSeconds: 10
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8087
-          initialDelaySeconds: 60
-          periodSeconds: 15
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
@@ -69,8 +69,8 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: user-service
-  minReplicas: 1
-  maxReplicas: 3
+  minReplicas: 2
+  maxReplicas: 5
   metrics:
   - type: Resource
     resource:
@@ -78,6 +78,12 @@ spec:
       target:
         type: Utilization
         averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget

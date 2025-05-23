@@ -3,6 +3,7 @@ package backend2.presentation;
 import backend2.domain.UserDTO;
 import backend2.domain.SubscriptionDTO;
 import backend2.domain.SubscriptionType;
+import backend2.domain.UserDataPortabilityDTO;
 import backend2.business.user.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,7 @@ public class UserController {
     private final UpdateUserUseCase updateUserUseCase;
     private final AddSubscriptionUseCase addSubscriptionUseCase;
     private final GetUserSubscriptionsUseCase getUserSubscriptionsUseCase;
+    private final GetUserDataPortabilityUseCase getUserDataPortabilityUseCase;
     private final PasswordEncoderService passwordEncoderService;
 
     @PostMapping
@@ -151,5 +153,16 @@ public class UserController {
             return ResponseEntity.status(403).build();
         }
         return ResponseEntity.ok(getUserSubscriptionsUseCase.getActiveUserSubscriptions(userId));
+    }
+
+    @GetMapping("/{id}/data-portability")
+    public ResponseEntity<UserDataPortabilityDTO> getUserDataPortability(@PathVariable Integer id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        Integer userId = ((Number) jwt.getClaim("userId")).intValue();
+        if (!userId.equals(id)) {
+            return ResponseEntity.status(403).build();
+        }
+        return ResponseEntity.ok(getUserDataPortabilityUseCase.getUserData(id));
     }
 }

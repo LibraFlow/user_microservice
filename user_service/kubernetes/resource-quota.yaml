@@ -6,9 +6,9 @@ spec:
   hard:
     requests.cpu: "1"
     requests.memory: 1Gi
-    limits.cpu: "2"
-    limits.memory: 2Gi
-    pods: "5"
+    limits.cpu: "4"
+    limits.memory: 4Gi
+    pods: "10"
     services: "5"
     configmaps: "10"
     secrets: "10"
