@@ -25,6 +25,9 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.beans.factory.annotation.Value;
 import backend2.security.PasswordEncoderService;
 import org.springframework.security.oauth2.jwt.Jwt;
+import java.util.Map;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.HttpHeaders;
 
 @RestController
 @RequestMapping("api/v1/users")
@@ -117,7 +120,16 @@ public class UserController {
             .setExpiration(new Date(now + 3600_000))
             .signWith(key, SignatureAlgorithm.HS256)
             .compact();
-        return ResponseEntity.ok().body("Bearer " + jwt);
+        ResponseCookie cookie = ResponseCookie.from("jwt", jwt)
+            .httpOnly(true)
+            .secure(false)
+            .path("/")
+            .sameSite("Lax")
+            .maxAge(3600)
+            .build();
+        return ResponseEntity.ok()
+            .header(HttpHeaders.SET_COOKIE, cookie.toString())
+            .body(Map.of("token", jwt));
     }
 
     @PostMapping("/{userId}/subscriptions")
