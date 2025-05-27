@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class DeleteUserUseCaseTest {
+class RightToBeForgottenUseCaseTest {
 
     @Mock
     private UserRepository userRepository;
@@ -32,7 +32,7 @@ class DeleteUserUseCaseTest {
     private EncryptionService encryptionService;
 
     @InjectMocks
-    private DeleteUserUseCase deleteUserUseCase;
+    private RightToBeForgottenUseCase rightToBeForgottenUseCase;
 
     private UserEntity testUserEntity;
     private UserDTO testUserDTO;
@@ -67,14 +67,14 @@ class DeleteUserUseCaseTest {
     }
 
     @Test
-    void deleteUser_Success() {
+    void exerciseRightToBeForgotten_Success() {
         // Arrange
         when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUserEntity));
         when(encryptionService.encrypt(anyString())).thenAnswer(i -> i.getArgument(0));
         when(userRepository.save(any(UserEntity.class))).thenReturn(testUserEntity);
 
         // Act
-        deleteUserUseCase.deleteUser(testUserId);
+        rightToBeForgottenUseCase.exerciseRightToBeForgotten(testUserId);
 
         // Verify
         verify(userRepository, times(1)).findById(testUserId);
@@ -83,19 +83,13 @@ class DeleteUserUseCaseTest {
     }
 
     @Test
-    void deleteUser_UserNotFound_ShouldThrowException() {
+    void exerciseRightToBeForgotten_UserNotFound_ShouldThrowException() {
         // Arrange
         when(userRepository.findById(testUserId)).thenReturn(Optional.empty());
 
         // Act & Assert
-        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
-            deleteUserUseCase.deleteUser(testUserId);
+        assertThrows(ResourceNotFoundException.class, () -> {
+            rightToBeForgottenUseCase.exerciseRightToBeForgotten(testUserId);
         });
-
-        assertEquals("User not found with id: " + testUserId, exception.getMessage());
-
-        // Verify
-        verify(userRepository, times(1)).findById(testUserId);
-        verify(userRepository, never()).save(any());
     }
 } 

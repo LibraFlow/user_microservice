@@ -37,9 +37,6 @@ public class UserControllerTest {
     private AddUserUseCase addUserUseCase;
 
     @Mock
-    private DeleteUserUseCase deleteUserUseCase;
-
-    @Mock
     private GetAllUsersUseCase getAllUsersUseCase;
 
     @Mock
@@ -47,6 +44,9 @@ public class UserControllerTest {
 
     @Mock
     private UpdateUserUseCase updateUserUseCase;
+
+    @Mock
+    private RightToBeForgottenUseCase rightToBeForgottenUseCase;
 
     @InjectMocks
     private UserController userController;
@@ -94,19 +94,19 @@ public class UserControllerTest {
     }
 
     @Test
-    void deleteUserTest() {
+    void exerciseRightToBeForgottenTest() {
         // Arrange
         setupSecurityContext();
         when(jwt.getClaim("userId")).thenReturn(1);
         when(authentication.getPrincipal()).thenReturn(jwt);
 
         // Act
-        ResponseEntity<Void> response = userController.deleteUser(1);
+        ResponseEntity<Void> response = userController.exerciseRightToBeForgotten(1);
 
         // Assert
         assertNotNull(response);
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(deleteUserUseCase, times(1)).deleteUser(1);
+        verify(rightToBeForgottenUseCase, times(1)).exerciseRightToBeForgotten(1);
     }
 
     @Test
@@ -166,6 +166,24 @@ public class UserControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(testUserDTO, response.getBody());
         verify(updateUserUseCase, times(1)).updateUser(1, testUserDTO, true);
+    }
+
+    @Test
+    void exerciseRightToBeForgottenTest() {
+        // Arrange
+        Integer userId = 1;
+        Authentication authentication = mock(Authentication.class);
+        Jwt jwt = mock(Jwt.class);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        when(jwt.getClaim("userId")).thenReturn(userId);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // Act
+        ResponseEntity<Void> response = userController.exerciseRightToBeForgotten(userId);
+
+        // Assert
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        verify(rightToBeForgottenUseCase, times(1)).exerciseRightToBeForgotten(userId);
     }
 
     @AfterEach

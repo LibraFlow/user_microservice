@@ -38,7 +38,7 @@ public class UserController {
     private String jwtSecret;
 
     private final AddUserUseCase addUserUseCase;
-    private final DeleteUserUseCase deleteUserUseCase;
+    private final RightToBeForgottenUseCase rightToBeForgottenUseCase;
     private final GetAllUsersUseCase getAllUsersUseCase;
     private final GetUserUseCase getUserUseCase;
     private final UpdateUserUseCase updateUserUseCase;
@@ -53,14 +53,14 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Integer id) {
+    public ResponseEntity<Void> exerciseRightToBeForgotten(@PathVariable Integer id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Jwt jwt = (Jwt) authentication.getPrincipal();
         Integer userId = ((Number) jwt.getClaim("userId")).intValue();
         if (!userId.equals(id)) {
             return ResponseEntity.status(403).build();
         }
-        deleteUserUseCase.deleteUser(id);
+        rightToBeForgottenUseCase.exerciseRightToBeForgotten(id);
         return ResponseEntity.noContent().build();
     }
 
