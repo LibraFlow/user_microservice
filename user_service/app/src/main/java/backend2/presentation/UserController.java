@@ -1,10 +1,12 @@
 package backend2.presentation;
 
 import backend2.domain.UserDTO;
-import backend2.domain.SubscriptionDTO;
-import backend2.domain.SubscriptionType;
 import backend2.domain.UserDataPortabilityDTO;
-import backend2.business.user.*;
+import backend2.business.usecase.user.RightToBeForgottenUseCase;
+import backend2.business.usecase.user.GetAllUsersUseCase;
+import backend2.business.usecase.user.GetUserUseCase;
+import backend2.business.usecase.user.UpdateUserUseCase;
+import backend2.business.usecase.user.GetUserDataPortabilityUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +25,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.beans.factory.annotation.Value;
-import backend2.security.PasswordEncoderService;
 import org.springframework.security.oauth2.jwt.Jwt;
 import java.util.Map;
 import org.springframework.http.ResponseCookie;
@@ -33,24 +34,11 @@ import org.springframework.http.HttpHeaders;
 @RequestMapping("api/v1/users")
 @RequiredArgsConstructor
 public class UserController {
-
-    @Value("${JWT_SECRET:12345678901234567890123456789012}")
-    private String jwtSecret;
-
-    private final AddUserUseCase addUserUseCase;
     private final RightToBeForgottenUseCase rightToBeForgottenUseCase;
     private final GetAllUsersUseCase getAllUsersUseCase;
     private final GetUserUseCase getUserUseCase;
     private final UpdateUserUseCase updateUserUseCase;
-    private final AddSubscriptionUseCase addSubscriptionUseCase;
-    private final GetUserSubscriptionsUseCase getUserSubscriptionsUseCase;
     private final GetUserDataPortabilityUseCase getUserDataPortabilityUseCase;
-    private final PasswordEncoderService passwordEncoderService;
-
-    @PostMapping
-    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserDTO userDto) {
-        return ResponseEntity.ok(addUserUseCase.createUser(userDto));
-    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> exerciseRightToBeForgotten(@PathVariable Integer id) {
@@ -102,69 +90,6 @@ public class UserController {
             return ResponseEntity.status(403).build();
         }
         return ResponseEntity.ok(updateUserUseCase.updateUser(id, userDto, isAdmin));
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UserDTO loginDto) {
-        UserDTO user = getUserUseCase.getUserByUsernameIfNotDeleted(loginDto.getUsername());
-        if (user == null || !passwordEncoderService.matches(loginDto.getPwd(), user.getPwd())) {
-            return ResponseEntity.status(401).body("Invalid credentials");
-        }
-        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-        long now = System.currentTimeMillis();
-        String jwt = Jwts.builder()
-            .setSubject(user.getUsername())
-            .claim("userId", user.getId())
-            .claim("roles", user.getRoles())
-            .setIssuedAt(new Date(now))
-            .setExpiration(new Date(now + 3600_000))
-            .signWith(key, SignatureAlgorithm.HS256)
-            .compact();
-        ResponseCookie cookie = ResponseCookie.from("jwt", jwt)
-            .httpOnly(true)
-            .secure(false)
-            .path("/")
-            .sameSite("Lax")
-            .maxAge(3600)
-            .build();
-        return ResponseEntity.ok()
-            .header(HttpHeaders.SET_COOKIE, cookie.toString())
-            .body(Map.of("token", jwt));
-    }
-
-    @PostMapping("/{userId}/subscriptions")
-    public ResponseEntity<SubscriptionDTO> addSubscription(
-            @PathVariable Integer userId,
-            @RequestParam SubscriptionType type) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Jwt jwt = (Jwt) authentication.getPrincipal();
-        Integer authUserId = ((Number) jwt.getClaim("userId")).intValue();
-        if (!authUserId.equals(userId)) {
-            return ResponseEntity.status(403).build();
-        }
-        return ResponseEntity.ok(addSubscriptionUseCase.addSubscription(userId, type));
-    }
-
-    @GetMapping("/{userId}/subscriptions")
-    public ResponseEntity<List<SubscriptionDTO>> getUserSubscriptions(@PathVariable Integer userId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Jwt jwt = (Jwt) authentication.getPrincipal();
-        Integer authUserId = ((Number) jwt.getClaim("userId")).intValue();
-        if (!authUserId.equals(userId)) {
-            return ResponseEntity.status(403).build();
-        }
-        return ResponseEntity.ok(getUserSubscriptionsUseCase.getUserSubscriptions(userId));
-    }
-
-    @GetMapping("/{userId}/subscriptions/active")
-    public ResponseEntity<List<SubscriptionDTO>> getActiveUserSubscriptions(@PathVariable Integer userId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Jwt jwt = (Jwt) authentication.getPrincipal();
-        Integer authUserId = ((Number) jwt.getClaim("userId")).intValue();
-        if (!authUserId.equals(userId)) {
-            return ResponseEntity.status(403).build();
-        }
-        return ResponseEntity.ok(getUserSubscriptionsUseCase.getActiveUserSubscriptions(userId));
     }
 
     @GetMapping("/{id}/data-portability")

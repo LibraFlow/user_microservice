@@ -2,7 +2,8 @@ package backend2.presentation;
 
 import backend2.domain.Role;
 import backend2.domain.UserDTO;
-import backend2.business.user.*;
+import backend2.business.usecase.user.*;
+import backend2.business.usecase.auth.RegisterUserUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,7 +35,7 @@ import static org.mockito.Mockito.*;
 public class UserControllerTest {
 
     @Mock
-    private AddUserUseCase addUserUseCase;
+    private RegisterUserUseCase registerUserUseCase;
 
     @Mock
     private GetAllUsersUseCase getAllUsersUseCase;
@@ -90,7 +91,7 @@ public class UserControllerTest {
         // Assert
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(addUserUseCase, times(1)).createUser(testUserDTO);
+        verify(registerUserUseCase, times(1)).createUser(testUserDTO);
     }
 
     @Test

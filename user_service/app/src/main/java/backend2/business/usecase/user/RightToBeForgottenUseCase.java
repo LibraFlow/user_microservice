@@ -1,4 +1,4 @@
-package backend2.business.user;
+package backend2.business.usecase.user;
 
 import backend2.persistence.UserRepository;
 import backend2.persistence.entity.UserEntity;

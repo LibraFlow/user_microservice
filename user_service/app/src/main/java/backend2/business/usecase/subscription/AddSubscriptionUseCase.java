@@ -1,4 +1,4 @@
-package backend2.business.user;
+package backend2.business.usecase.subscription;
 
 import backend2.domain.SubscriptionDTO;
 import backend2.domain.SubscriptionType;

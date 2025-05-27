@@ -20,8 +20,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import backend2.business.usecase.auth.RegisterUserUseCase;
+
 @ExtendWith(MockitoExtension.class)
-class AddUserUseCaseTest {
+class RegisterUserUseCaseTest {
 
     @Mock
     private UserRepository userRepository;
@@ -30,7 +32,7 @@ class AddUserUseCaseTest {
     private UserMapper userMapper;
 
     @InjectMocks
-    private AddUserUseCase addUserUseCase;
+    private RegisterUserUseCase registerUserUseCase;
 
     private UserDTO testUserDTO;
     private UserEntity testUserEntity;
@@ -85,7 +87,7 @@ class AddUserUseCaseTest {
         when(userMapper.toDTO(testUserEntity)).thenReturn(testUserDTO);
 
         // Act
-        UserDTO result = addUserUseCase.createUser(testUserDTO);
+        UserDTO result = registerUserUseCase.createUser(testUserDTO);
 
         // Assert
         assertNotNull(result);
@@ -110,7 +112,7 @@ class AddUserUseCaseTest {
 
         // Act & Assert
         assertThrows(NullPointerException.class, () -> {
-            addUserUseCase.createUser(null);
+            registerUserUseCase.createUser(null);
         });
 
         // Verify

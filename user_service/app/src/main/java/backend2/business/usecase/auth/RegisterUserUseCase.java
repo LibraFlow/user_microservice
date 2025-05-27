@@ -1,4 +1,4 @@
-package backend2.business.user;
+package backend2.business.usecase.auth;
 
 import backend2.persistence.entity.UserEntity;
 import backend2.domain.UserDTO;
@@ -13,7 +13,7 @@ import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
-public class AddUserUseCase {
+public class RegisterUserUseCase {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
 
