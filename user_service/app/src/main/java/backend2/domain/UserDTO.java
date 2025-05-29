@@ -2,6 +2,7 @@ package backend2.domain;
 
 import lombok.*;
 import jakarta.validation.constraints.*;
+import backend2.security.validation.ValidPassword;
 import java.util.Set;
 import java.time.LocalDate;
 
@@ -17,6 +18,7 @@ public class UserDTO {
     private String username;
 
     @NotBlank(message = "Password cannot be blank")
+    @ValidPassword
     private String pwd;  // Changed from char[] to String for BCrypt
 
     @NotBlank(message = "Email cannot be blank")

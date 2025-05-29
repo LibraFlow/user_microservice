@@ -3,6 +3,7 @@ package backend2.persistence.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import jakarta.validation.constraints.*;
+import backend2.security.validation.ValidPassword;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -24,6 +25,7 @@ public class UserEntity {
     private String username;
 
     @NotBlank(message = "Password cannot be blank")
+    @ValidPassword
     private String pwd;
 
     @NotBlank(message = "Email cannot be blank")

@@ -49,10 +49,8 @@ public class AddSubscriptionUseCase {
             // New subscription starts when current one expires
             startDate = currentActiveSubscription.getEndDate();
             endDate = startDate.plusDays(type.getDurationInDays());
-
-            // Deactivate current subscription
-            currentActiveSubscription.setActive(false);
-            subscriptionRepository.save(currentActiveSubscription);
+            
+            // Note: We no longer deactivate the current subscription
         } else {
             // No active subscription, start immediately
             startDate = now;
