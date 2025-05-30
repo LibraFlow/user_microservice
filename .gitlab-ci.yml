@@ -82,11 +82,9 @@ zap_dast_scan:
   script:
     - docker-compose -f docker-compose.yml up -d user-service db6
     - Start-Sleep -Seconds 30
-    # Download and unzip the latest ZAP weekly build using PowerShell
     - powershell -Command "Invoke-WebRequest -Uri 'https://github.com/zaproxy/zaproxy/releases/download/w2025-05-26/ZAP_WEEKLY_D-2025-05-26.zip' -OutFile 'zap.zip'"
     - powershell -Command "Expand-Archive -Path 'zap.zip' -DestinationPath 'zap'"
-    # Run ZAP baseline scan
-    - zap\ZAP_WEEKLY_D-2025-05-26\zap-baseline.bat -t http://localhost:8087 -r zap_report.html
+    - cmd.exe /c "zap\ZAP_WEEKLY_D-2025-05-26\zap-baseline.bat -t http://localhost:8087 -r zap_report.html"
   artifacts:
     when: always
     expire_in: 1 week
