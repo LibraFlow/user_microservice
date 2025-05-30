@@ -7,7 +7,7 @@ plugins {
     id 'org.springframework.boot' version '3.2.3'
     id 'io.spring.dependency-management' version '1.1.4'
     id 'com.github.spotbugs' version '6.0.7'
-    id 'org.owasp.dependencycheck' version '8.0.0'
+    id 'org.owasp.dependencycheck' version '8.4.0'
 }
 
 repositories {
@@ -102,5 +102,5 @@ dependencyCheck {
     data {
         directory = 'dependency-check-data'
     }
-    autoUpdate = false
+    autoUpdate = true
 }
