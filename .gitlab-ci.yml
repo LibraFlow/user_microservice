@@ -80,7 +80,15 @@ static_analysis:
 zap_scan:
   stage: security_testing
   script:
-    - docker run --rm -v "${PWD}:/zap/wrk" zaproxy/zap-stable zap-baseline.py -t http://user-service:8087 -r zap_report.html
+    # Start the service in the background
+    - cd user_service
+    - Start-Process -NoNewWindow -FilePath "gradle" -ArgumentList "bootRun" -PassThru
+    # Wait for the service to start
+    - Start-Sleep -Seconds 30
+    # Run ZAP scan against localhost
+    - docker run --rm -v "${PWD}:/zap/wrk" zaproxy/zap-stable zap-baseline.py -t http://localhost:8087 -r zap_report.html
+    # Stop the service
+    - Get-Process -Name "java" | Stop-Process -Force
   artifacts:
     when: always
     paths:
