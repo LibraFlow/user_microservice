@@ -1,40 +1,42 @@
-parameters:
-  target: "http://host.docker.internal:8087"
-  failOnError: true
+env:
+  contexts:
+    - name: user-service-context
+      urls:
+        - "http://host.docker.internal:8087"
+      includePaths:
+        - "http://host.docker.internal:8087.*"
+      authentication:
+        method: script
+        parameters:
+          script: JWT Script-based Authentication
+          scriptEngine: ECMAScript : Oracle Nashorn
+          scriptFile: /zap/scripts/authenticate.js
+          loginUrl: "http://host.docker.internal:8087/api/v1/auth/login"
+          loginRequestBody: '{"username":"your_username","password":"your_password"}'
+          tokenJsonPath: "$.token" # Adjust this to match your API's response
+        verification:
+          method: response
+          loggedInRegex: ".*"
+          loggedOutRegex: "401 Unauthorized"
+      users:
+        - name: zapuser
+          credentials:
+            username: "your_username"
+            password: "your_password"
+          forced: true
 
 jobs:
-  - type: env
-    name: Set Auth Vars
-    env:
-      username: "your_username"
-      password: "your_password"
-
-  - type: request
-    name: Login and get JWT
-    request:
-      url: "http://host.docker.internal:8087/api/v1/auth/login"
-      method: POST
-      headers:
-        Content-Type: application/json
-      body: |
-        {
-          "username": "${username}",
-          "password": "${password}"
-        }
-      store: jwt_response
-
-  - type: script
-    name: Extract JWT
-    script: |
-      import json
-      resp = json.loads(context.vars['jwt_response'])
-      context.vars['jwt'] = resp['token']  # Adjust this key to match your API's response
-
-  - type: passiveScan
-    name: Authenticated Passive Scan
+  - type: spider
     parameters:
+      context: user-service-context
+      user: zapuser
       url: "http://host.docker.internal:8087"
-      httpHeaders:
-        Authorization: "Bearer ${jwt}"
-      maxDuration: 5
-      reportFile: "zap_report.html"
+      maxDuration: 2
+
+  - type: passiveScan-wait
+
+  - type: report
+    parameters:
+      template: traditional-html
+      reportDir: /zap/wrk
+      reportFile: zap_report.html
