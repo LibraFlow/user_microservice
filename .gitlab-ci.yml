@@ -80,21 +80,22 @@ static_analysis:
 zap_scan:
   stage: security_testing
   script:
-    # Start the database container
+    - echo "Starting database container"
     - docker-compose up -d db6
-    # Wait for database to be ready
+    - echo "Waiting for database to be ready"
     - Start-Sleep -Seconds 10
-    # Start the application
+    - echo "Starting Spring Boot app"
     - cd user_service
-    - Start-Process -NoNewWindow -FilePath "gradle" -ArgumentList "bootRun" -PassThru
-    # Wait for the application to start
-    - Start-Sleep -Seconds 30
-    # Go back to the root directory for ZAP scan and artifact upload
+    # Start the app in the background and save the job
+    - Start-Job -ScriptBlock { gradle bootRun } -Name "springboot"
     - cd ..
-    # Run ZAP scan against host.docker.internal
+    - echo "Waiting for app to start"
+    - Start-Sleep -Seconds 40
+    - echo "Running ZAP scan"
     - docker run --rm -v "${PWD}:/zap/wrk" zaproxy/zap-stable zap-baseline.py -t http://host.docker.internal:8087 -r zap_report.html
-    # Cleanup (ignore errors if process not found)
-    - Get-Process -Name "java" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    - echo "Stopping Spring Boot app"
+    - Get-Job -Name "springboot" | Stop-Job -Force
+    - echo "Cleaning up database"
     - docker-compose down
   artifacts:
     when: always
