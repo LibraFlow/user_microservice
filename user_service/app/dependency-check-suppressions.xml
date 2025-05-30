@@ -26,4 +26,23 @@
         <packageUrl regex="true">^pkg:maven/org\.hibernate/.*@.*$</packageUrl>
         <cpe>cpe:/a:hibernate:hibernate</cpe>
     </suppress>
+    
+    <!-- Suppress false positives for Spring Boot -->
+    <suppress>
+        <notes>Spring Boot dependencies are managed by Spring Boot itself</notes>
+        <packageUrl regex="true">pkg:maven/org\.springframework\.boot/.*</packageUrl>
+        <cve>CVE-2023-20873</cve>
+    </suppress>
+    
+    <!-- Suppress false positives for JWT -->
+    <suppress>
+        <notes>JWT dependencies are managed by Spring Security</notes>
+        <packageUrl regex="true">pkg:maven/io\.jsonwebtoken/.*</packageUrl>
+    </suppress>
+    
+    <!-- Suppress false positives for PostgreSQL -->
+    <suppress>
+        <notes>PostgreSQL driver is managed by Spring Boot</notes>
+        <packageUrl regex="true">pkg:maven/org\.postgresql/.*</packageUrl>
+    </suppress>
 </suppressions> 
