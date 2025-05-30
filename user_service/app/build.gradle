@@ -99,19 +99,8 @@ dependencyCheck {
         assemblyEnabled = false
         ossIndexEnabled = false
     }
-    // Use local data only
     data {
         directory = 'dependency-check-data'
     }
-    // Configure NVD API key if available
-    if (System.getenv('NVD_API_KEY')) {
-        nvd {
-            apiKey = System.getenv('NVD_API_KEY')
-        }
-    }
-    // Disable automatic updates
     autoUpdate = false
-    nvd {
-        apiKey = project.findProperty('dependencyCheck.nvd.apiKey') ?: System.getenv('NVD_API_KEY')
-    }
 }
