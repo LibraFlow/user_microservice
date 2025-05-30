@@ -12,6 +12,12 @@ variables:
   KUBE_NAMESPACE: user-service
   KUBE_CLUSTER: ${GCP_PROJECT_ID}-gke
 
+# Skip cleaning these paths
+cleanup:
+  paths:
+    - user_service/.gradle/
+    - user_service/app/build/
+
 # Tell GitLab Runner to preserve these paths during cleanup
 workflow:
   rules:
