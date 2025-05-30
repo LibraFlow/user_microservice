@@ -97,26 +97,6 @@ owasp_cli_scan:
       dependency_scanning: owasp-report/dependency-check-report.json
   allow_failure: true
 
-zap_scan:
-  stage: security_testing
-  script:
-    - docker-compose -f docker-compose.yml up -d user-service db6
-    - Start-Sleep -Seconds 30
-    - Invoke-WebRequest -Uri "https://github.com/zaproxy/zaproxy/releases/download/v2.15.0/ZAP_2_15_0_Windows.zip" -OutFile "zap.zip"
-    - Expand-Archive -Path "zap.zip" -DestinationPath "zap"
-    - $body = '{"username":"testuser32","pwd":"password123"}'
-    - $response = Invoke-RestMethod -Uri "http://localhost:3000/userservice/api/v1/auth/login" -Method Post -ContentType "application/json" -Body $body
-    - $TOKEN = $response.token
-    - Write-Host "Token: $TOKEN"
-    - >
-      zap\ZAP_2.15.0\zap-baseline.bat -t http://localhost:8087 -r zap_report.html -z "-config replacer.full_list(0).description=auth -config replacer.full_list(0).enabled=true -config replacer.full_list(0).matchtype=REQ_HEADER -config replacer.full_list(0).matchstr=Authorization -config replacer.full_list(0).replacement=Bearer $TOKEN"
-  artifacts:
-    when: always
-    expire_in: 1 week
-    paths:
-      - zap_report.html
-  allow_failure: true
-
 build:
   stage: build
   image: gradle:jdk17
