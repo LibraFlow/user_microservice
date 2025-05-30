@@ -80,7 +80,7 @@ static_analysis:
 zap_scan:
   stage: security_testing
   script:
-    - docker run --rm -v "${PWD}:/zap/wrk" zaproxy/zap-stable zap-automation.py -f /zap/wrk/zap-automation.yaml
+    - docker run --rm -v "${PWD}:/zap/wrk" zaproxy/zap-stable zap.sh -cmd -autorun /zap/wrk/zap-automation.yaml
   artifacts:
     when: always
     paths:
