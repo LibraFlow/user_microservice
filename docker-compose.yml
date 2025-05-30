@@ -30,6 +30,11 @@ services:
       - db6
     networks:
       - user-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   db6-data:
