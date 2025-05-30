@@ -78,13 +78,10 @@ static_analysis:
 #   allow_failure: true
 
 zap_dast_scan:
+  image: owasp/zap2docker-stable
   stage: security_testing
   script:
-    - docker-compose -f docker-compose.yml up -d user-service db6
-    - Start-Sleep -Seconds 30
-    - powershell -Command "Invoke-WebRequest -Uri 'https://github.com/zaproxy/zaproxy/releases/download/v2.16.1/ZAP_2.16.1_Crossplatform.zip' -OutFile 'zap.zip'"
-    - powershell -Command "Expand-Archive -Path 'zap.zip' -DestinationPath 'zap' -Force"
-    - powershell -Command "& '.\\zap\\zap-baseline.bat' -t http://localhost:8087 -r zap_report.html"
+    - zap-baseline.py -t http://user-service:8087 -r zap_report.html
   artifacts:
     when: always
     expire_in: 1 week
