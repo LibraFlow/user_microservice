@@ -80,7 +80,7 @@ static_analysis:
 zap_scan:
   stage: security_testing
   script:
-    - docker run --rm -v "%cd%:/zap/wrk" zaproxy/zap-stable zap-baseline.py -t http://user-service:8087 -r zap_report.html
+    - docker run --rm -v "${PWD}:/zap/wrk" zaproxy/zap-stable zap-baseline.py -t http://user-service:8087 -r zap_report.html
   artifacts:
     when: always
     paths:
