@@ -56,7 +56,7 @@ dependency_check:
         Write-Host "::warning::NVD_API_KEY is not set. Dependency check will run with limited functionality."
         Write-Host "::warning::Please set NVD_API_KEY in GitLab CI/CD variables for better results."
       }
-    - gradle dependencyCheckAnalyze
+    - gradle dependencyCheckAnalyze -PdependencyCheck.nvd.apiKey=$NVD_API_KEY
     # Check if dependency check report exists and contains vulnerabilities
     - |
       if (Test-Path "app/build/reports/dependency-check-report.html") {
@@ -79,6 +79,25 @@ dependency_check:
     paths:
       - user_service/app/build/reports/dependency-check-report.html
       - user_service/app/build/reports/dependency-check-report.json
+  allow_failure: true  # Allow the stage to fail without stopping the pipeline
+
+owasp_cli_scan:
+  stage: security_testing
+  image: owasp/dependency-check:latest
+  variables:
+    # Set the NVD API key for the CLI
+    NVD_API_KEY: $NVD_API_KEY
+  script:
+    - mkdir -p owasp-report
+    # Scan the user_service/app directory (adjust if you want to scan a different path)
+    - dependency-check.sh --project "user-service" --scan user_service/app --format "ALL" --out owasp-report --nvdApiKey $NVD_API_KEY
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - owasp-report/
+    reports:
+      dependency_scanning: owasp-report/dependency-check-report.json
   allow_failure: true  # Allow the stage to fail without stopping the pipeline
 
 build:
