@@ -78,16 +78,22 @@ static_analysis:
 #   allow_failure: true
 
 zap_dast_scan:
-  image: owasp/zap2docker-stable
   stage: security_testing
+  image: owasp/zap2docker-stable
   script:
-    - zap-baseline.py -t http://user-service:8087 -r zap_report.html
+    - mkdir -p /zap/wrk/
+    - zap-baseline.py -t $TARGET_URL -J zap-report.json -r zap-report.html
   artifacts:
     when: always
-    expire_in: 1 week
     paths:
-      - zap_report.html
+      - zap-report.html
+      - zap-report.json
+    reports:
+      junit: zap-report.json
   allow_failure: true
+  only:
+    - merge_requests
+    - main
 
 build:
   stage: build
