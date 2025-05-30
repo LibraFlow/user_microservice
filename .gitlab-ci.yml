@@ -102,7 +102,7 @@ zap_scan:
   image: owasp/zap2docker-stable
   script:
     # Start your user-service in the background (if not already running)
-    - docker-compose -f libraflow_user_server/docker-compose.yml up -d user-service db6
+    - docker-compose -f docker-compose.yml up -d user-service db6
     # Wait for the service to be up (adjust the sleep as needed)
     - sleep 30
     # Run ZAP baseline scan against the running service
