@@ -51,7 +51,12 @@ dependency_check:
   script:
     - cd user_service
     - mkdir -p app/dependency-check-data
-    - gradle dependencyCheckAnalyze || Write-Host "::warning::Dependency check failed to run. This might be due to missing NVD API key."
+    - |
+      if (-not $env:NVD_API_KEY) {
+        Write-Host "::warning::NVD_API_KEY is not set. Dependency check will run with limited functionality."
+        Write-Host "::warning::Please set NVD_API_KEY in GitLab CI/CD variables for better results."
+      }
+    - gradle dependencyCheckAnalyze
     # Check if dependency check report exists and contains vulnerabilities
     - |
       if (Test-Path "app/build/reports/dependency-check-report.html") {
@@ -67,6 +72,8 @@ dependency_check:
         exit 0
       }
   artifacts:
+    when: always
+    expire_in: 1 week
     reports:
       dependency_scanning: user_service/app/build/reports/dependency-check-report.json
     paths:
