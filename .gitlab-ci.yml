@@ -5,6 +5,7 @@ stages:
 - deploy-kubernetes
 
 variables:
+  GIT_STRATEGY: clone
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
   DOCKER_IMAGE: ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/user-service/user-service:${CI_COMMIT_SHA}
   # Add NVD API key for better dependency check results
