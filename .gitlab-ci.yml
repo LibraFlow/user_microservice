@@ -79,9 +79,9 @@ static_analysis:
 #   allow_failure: true
 
 zap_scan:
-  stage: test
+  stage: security_testing
   script:
-    - docker run -t owasp/zap2docker-stable zap-baseline.py -t http://user-service:8087 -r zap_report.html
+    - docker run -t zaproxy/zap-stable zap-baseline.py -t http://user-service:8087 -r zap_report.html
   artifacts:
     paths:
       - zap_report.html
