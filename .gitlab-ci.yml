@@ -12,14 +12,14 @@ variables:
   KUBE_NAMESPACE: user-service
   KUBE_CLUSTER: ${GCP_PROJECT_ID}-gke
 
-before_script:
+after_script:
   - |
-    # Clean up Gradle files if they exist
+    # Wait a moment to ensure all processes have released their file handles
+    Start-Sleep -Seconds 2
+    # Clean up with error handling
+    $ErrorActionPreference = 'SilentlyContinue'
     if (Test-Path "user_service/.gradle") {
-      Remove-Item -Path "user_service/.gradle" -Recurse -Force -ErrorAction SilentlyContinue
-    }
-    if (Test-Path "user_service/app/build") {
-      Remove-Item -Path "user_service/app/build" -Recurse -Force -ErrorAction SilentlyContinue
+      Remove-Item -Path "user_service/.gradle" -Recurse -Force
     }
 
 cache:
