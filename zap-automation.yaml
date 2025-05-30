@@ -1,0 +1,40 @@
+parameters:
+  target: "http://host.docker.internal:8087"
+  failOnError: true
+
+jobs:
+  - type: env
+    name: Set Auth Vars
+    env:
+      username: "your_username"
+      password: "your_password"
+
+  - type: request
+    name: Login and get JWT
+    request:
+      url: "http://host.docker.internal:8087/api/v1/auth/login"
+      method: POST
+      headers:
+        Content-Type: application/json
+      body: |
+        {
+          "username": "${username}",
+          "password": "${password}"
+        }
+      store: jwt_response
+
+  - type: script
+    name: Extract JWT
+    script: |
+      import json
+      resp = json.loads(context.vars['jwt_response'])
+      context.vars['jwt'] = resp['token']  # Adjust this key to match your API's response
+
+  - type: passiveScan
+    name: Authenticated Passive Scan
+    parameters:
+      url: "http://host.docker.internal:8087"
+      httpHeaders:
+        Authorization: "Bearer ${jwt}"
+      maxDuration: 5
+      reportFile: "zap_report.html"
