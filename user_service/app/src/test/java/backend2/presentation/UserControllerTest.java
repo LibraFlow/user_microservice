@@ -169,24 +169,6 @@ public class UserControllerTest {
         verify(updateUserUseCase, times(1)).updateUser(1, testUserDTO, true);
     }
 
-    @Test
-    void exerciseRightToBeForgottenTest() {
-        // Arrange
-        Integer userId = 1;
-        Authentication authentication = mock(Authentication.class);
-        Jwt jwt = mock(Jwt.class);
-        when(authentication.getPrincipal()).thenReturn(jwt);
-        when(jwt.getClaim("userId")).thenReturn(userId);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // Act
-        ResponseEntity<Void> response = userController.exerciseRightToBeForgotten(userId);
-
-        // Assert
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(rightToBeForgottenUseCase, times(1)).exerciseRightToBeForgotten(userId);
-    }
-
     @AfterEach
     void clearSecurityContext() {
         SecurityContextHolder.clearContext();

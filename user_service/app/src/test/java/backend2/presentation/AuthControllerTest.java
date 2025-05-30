@@ -2,6 +2,7 @@ package backend2.presentation;
 
 import backend2.domain.UserDTO;
 import backend2.business.usecase.user.GetUserUseCase;
+import backend2.business.usecase.auth.CreateJwtTokenUseCase;
 import backend2.security.PasswordEncoderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.ResponseCookie;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -25,11 +27,15 @@ public class AuthControllerTest {
     private GetUserUseCase getUserUseCase;
     @Mock
     private PasswordEncoderService passwordEncoderService;
+    @Mock
+    private CreateJwtTokenUseCase createJwtTokenUseCase;
     @InjectMocks
     private AuthController authController;
 
     private UserDTO testUserDTO;
     private Set<backend2.domain.Role> testRoles;
+    private String testJwtToken;
+    private ResponseCookie testCookie;
 
     @BeforeEach
     void setUp() {
@@ -44,15 +50,23 @@ public class AuthControllerTest {
                 .phone("+1234567890")
                 .roles(testRoles)
                 .build();
+        testJwtToken = "test.jwt.token";
+        testCookie = ResponseCookie.from("jwt", testJwtToken).build();
     }
 
     @Test
     void loginSuccessTest() {
         when(getUserUseCase.getUserByUsernameIfNotDeleted("testuser")).thenReturn(testUserDTO);
         when(passwordEncoderService.matches(anyString(), anyString())).thenReturn(true);
+        when(createJwtTokenUseCase.createToken(testUserDTO)).thenReturn(testJwtToken);
+        when(createJwtTokenUseCase.createJwtCookie(testJwtToken)).thenReturn(testCookie);
+
         ResponseEntity<?> response = authController.login(testUserDTO);
+        
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertTrue(((Map<?, ?>) response.getBody()).containsKey("token"));
+        assertEquals(testJwtToken, ((Map<?, ?>) response.getBody()).get("token"));
+        assertEquals(testCookie.toString(), response.getHeaders().getFirst("Set-Cookie"));
     }
 
     @Test

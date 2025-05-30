@@ -40,7 +40,7 @@ public class SubscriptionControllerTest {
         testSubscriptionDTO = SubscriptionDTO.builder()
                 .id(1)
                 .userId(1)
-                .type(SubscriptionType.BASIC)
+                .type(SubscriptionType.MONTHLY)
                 .active(true)
                 .build();
         jwt = mock(Jwt.class);
@@ -54,8 +54,8 @@ public class SubscriptionControllerTest {
 
     @Test
     void addSubscriptionTest() {
-        when(addSubscriptionUseCase.addSubscription(1, SubscriptionType.BASIC)).thenReturn(testSubscriptionDTO);
-        ResponseEntity<SubscriptionDTO> response = subscriptionController.addSubscription(1, SubscriptionType.BASIC);
+        when(addSubscriptionUseCase.addSubscription(1, SubscriptionType.MONTHLY)).thenReturn(testSubscriptionDTO);
+        ResponseEntity<SubscriptionDTO> response = subscriptionController.addSubscription(1, SubscriptionType.MONTHLY);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(testSubscriptionDTO, response.getBody());
     }

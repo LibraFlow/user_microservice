@@ -1,10 +1,11 @@
-package backend2.business.user;
+package backend2.business.usecase.user;
 
 import backend2.domain.UserDTO;
 import backend2.domain.Role;
 import backend2.persistence.UserRepository;
 import backend2.persistence.entity.UserEntity;
 import backend2.business.mapper.UserMapper;
+import backend2.business.usecase.user.UpdateUserUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

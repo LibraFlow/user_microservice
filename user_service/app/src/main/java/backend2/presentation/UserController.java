@@ -7,6 +7,7 @@ import backend2.business.usecase.user.GetAllUsersUseCase;
 import backend2.business.usecase.user.GetUserUseCase;
 import backend2.business.usecase.user.UpdateUserUseCase;
 import backend2.business.usecase.user.GetUserDataPortabilityUseCase;
+import backend2.business.usecase.auth.RegisterUserUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +40,12 @@ public class UserController {
     private final GetUserUseCase getUserUseCase;
     private final UpdateUserUseCase updateUserUseCase;
     private final GetUserDataPortabilityUseCase getUserDataPortabilityUseCase;
+    private final RegisterUserUseCase registerUserUseCase;
+
+    @PostMapping
+    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserDTO userDTO) {
+        return ResponseEntity.ok(registerUserUseCase.createUser(userDTO));
+    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> exerciseRightToBeForgotten(@PathVariable Integer id) {
