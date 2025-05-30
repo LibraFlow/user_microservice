@@ -89,10 +89,12 @@ zap_scan:
     - Start-Process -NoNewWindow -FilePath "gradle" -ArgumentList "bootRun" -PassThru
     # Wait for the application to start
     - Start-Sleep -Seconds 30
-    # Run ZAP scan against localhost
+    # Go back to the root directory for ZAP scan and artifact upload
+    - cd ..
+    # Run ZAP scan against host.docker.internal
     - docker run --rm -v "${PWD}:/zap/wrk" zaproxy/zap-stable zap-baseline.py -t http://host.docker.internal:8087 -r zap_report.html
-    # Cleanup
-    - Get-Process -Name "java" | Stop-Process -Force
+    # Cleanup (ignore errors if process not found)
+    - Get-Process -Name "java" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
     - docker-compose down
   artifacts:
     when: always
