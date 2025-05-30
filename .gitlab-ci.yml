@@ -77,19 +77,15 @@ static_analysis:
 #       dependency_scanning: owasp-report/dependency-check-report.json
 #   allow_failure: true
 
-zap_baseline_scan:
+zap_scan:
   stage: security_testing
-  image: owasp/zap2docker-stable
   script:
-    - mkdir -p /zap/wrk/
-    - zap-baseline.py -t http://user-service:8087 -J zap-report.json -r zap-report.html
+    # Mount the current directory into the container so the report is saved to your workspace
+    - docker run --rm -v "%cd%:/zap/wrk" owasp/zap2docker-stable zap-baseline.py -t http://user-service:8087 -r zap_report.html
   artifacts:
     when: always
     paths:
-      - zap-report.html
-      - zap-report.json
-    reports:
-      junit: zap-report.json
+      - zap_report.html
   allow_failure: true
   only:
     - merge_requests
