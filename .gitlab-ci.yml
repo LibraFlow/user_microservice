@@ -86,7 +86,7 @@ zap_dast_scan:
     - docker-compose -f docker-compose.yml up -d user-service db6
     - sleep 30
     - zap-baseline.py -t http://host.docker.internal:8087 -r zap_report.html
-    - Remove-Item -Recurse -Force dependency-check || true
+    - Remove-Item -Recurse -Force dependency-check -ErrorAction SilentlyContinue
   artifacts:
     when: always
     expire_in: 1 week
