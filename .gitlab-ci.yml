@@ -47,39 +47,19 @@ static_analysis:
 
 dependency_check:
   stage: security_testing
-  image: gradle:jdk17
   script:
-    - cd user_service
-    - mkdir -p app/dependency-check-data
-    - |
-      if (-not $env:NVD_API_KEY) {
-        Write-Host "::warning::NVD_API_KEY is not set. Dependency check will run with limited functionality."
-        Write-Host "::warning::Please set NVD_API_KEY in GitLab CI/CD variables for better results."
-      }
-    - gradle dependencyCheckAnalyze -PdependencyCheck.nvd.apiKey=$NVD_API_KEY
-    # Check if dependency check report exists and contains vulnerabilities
-    - |
-      if (Test-Path "app/build/reports/dependency-check-report.html") {
-        $html = Get-Content "app/build/reports/dependency-check-report.html" -Raw
-        if ($html -match "Vulnerabilities Found") {
-          Write-Host "::warning::Dependency check found vulnerabilities. Please review the report in the artifacts."
-          Write-Host "::warning::To view the report, download the artifacts from this job."
-          # Exit with code 0 to allow the pipeline to continue, but with a warning
-          exit 0
-        }
-      } else {
-        Write-Host "::warning::Dependency check report not generated. This might be due to missing NVD API key."
-        exit 0
-      }
+    - powershell -Command "Invoke-WebRequest -Uri 'https://github.com/jeremylong/DependencyCheck/releases/download/v12.1.0/dependency-check-12.1.0-release.zip' -OutFile 'dependency-check.zip'"
+    - powershell -Command "Expand-Archive -Path 'dependency-check.zip' -DestinationPath 'dependency-check'"
+    - mkdir -p dependency-check-report
+    - powershell -Command "& 'dependency-check/dependency-check/bin/dependency-check.bat' --project 'user-service' --scan 'user_service/app' --format 'ALL' --out 'dependency-check-report'"
   artifacts:
     when: always
     expire_in: 1 week
-    reports:
-      dependency_scanning: user_service/app/build/reports/dependency-check-report.json
     paths:
-      - user_service/app/build/reports/dependency-check-report.html
-      - user_service/app/build/reports/dependency-check-report.json
-  allow_failure: true  # Allow the stage to fail without stopping the pipeline
+      - dependency-check-report/
+    reports:
+      dependency_scanning: dependency-check-report/dependency-check-report.json
+  allow_failure: true
 
 owasp_cli_scan:
   stage: security_testing
@@ -95,6 +75,22 @@ owasp_cli_scan:
       - owasp-report/
     reports:
       dependency_scanning: owasp-report/dependency-check-report.json
+  allow_failure: true
+
+zap_dast_scan:
+  stage: security_testing
+  image: owasp/zap2docker-stable
+  services:
+    - docker:dind
+  script:
+    - docker-compose -f docker-compose.yml up -d user-service db6
+    - sleep 30
+    - zap-baseline.py -t http://host.docker.internal:8087 -r zap_report.html
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - zap_report.html
   allow_failure: true
 
 build:
