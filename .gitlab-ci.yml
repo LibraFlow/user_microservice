@@ -12,15 +12,17 @@ variables:
   KUBE_NAMESPACE: user-service
   KUBE_CLUSTER: ${GCP_PROJECT_ID}-gke
 
-after_script:
-  - |
-    # Wait a moment to ensure all processes have released their file handles
-    Start-Sleep -Seconds 2
-    # Clean up with error handling
-    $ErrorActionPreference = 'SilentlyContinue'
-    if (Test-Path "user_service/.gradle") {
-      Remove-Item -Path "user_service/.gradle" -Recurse -Force
-    }
+# Tell GitLab Runner to preserve these paths during cleanup
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# Preserve these paths during cleanup
+artifacts:
+  paths:
+    - user_service/.gradle/
+    - user_service/app/build/
 
 cache:
   paths:
