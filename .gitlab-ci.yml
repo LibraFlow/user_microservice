@@ -77,12 +77,12 @@ static_analysis:
 #       dependency_scanning: owasp-report/dependency-check-report.json
 #   allow_failure: true
 
-zap_dast_scan:
+zap_baseline_scan:
   stage: security_testing
   image: owasp/zap2docker-stable
   script:
     - mkdir -p /zap/wrk/
-    - zap-baseline.py -t $TARGET_URL -J zap-report.json -r zap-report.html
+    - zap-baseline.py -t http://user-service:8087 -J zap-report.json -r zap-report.html
   artifacts:
     when: always
     paths:
