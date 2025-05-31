@@ -12,6 +12,8 @@ variables:
   NVD_API_KEY: ${NVD_API_KEY}
   KUBE_NAMESPACE: user-service
   KUBE_CLUSTER: ${GCP_PROJECT_ID}-gke
+  # Add Docker network name for ZAP scanning
+  DOCKER_NETWORK: zap-network
 
 cache:
   paths:
@@ -80,20 +82,46 @@ static_analysis:
 
 zap_scan:
   stage: security_testing
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: "/certs/client"
+  before_script:
+    - apk add --no-cache docker-compose
+    - docker network create $DOCKER_NETWORK
   script:
+    # Build and start the user service
+    - cd user_service
+    - docker build -t user-service:test .
+    - docker run -d --name user-service --network $DOCKER_NETWORK -p 8087:8087 user-service:test
+    # Wait for the service to be ready
     - |
-      # Wait for the user-service to be up (max 60s)
-      for ($i=0; $i -lt 30; $i++) {
-        try {
-          $response = Invoke-WebRequest -Uri http://localhost:8087 -UseBasicParsing -TimeoutSec 2
-          if ($response.StatusCode -eq 200) { break }
-        } catch {}
-        Start-Sleep -Seconds 2
-      }
-    - docker run --network=host -v "${PWD}:/zap/wrk" -t zaproxy/zap-stable zap-baseline.py -t http://localhost:8087 -r zap_report.html
+      for i in $(seq 1 30); do
+        if curl -s http://localhost:8087/actuator/health | grep -q "UP"; then
+          echo "Service is up!"
+          break
+        fi
+        if [ $i -eq 30 ]; then
+          echo "Service failed to start within 60 seconds"
+          exit 1
+        fi
+        echo "Waiting for service to start... ($i/30)"
+        sleep 2
+      done
+    # Run ZAP scan
+    - docker run --network $DOCKER_NETWORK -v "${PWD}:/zap/wrk" -t zaproxy/zap-stable zap-baseline.py -t http://user-service:8087 -r zap_report.html
+  after_script:
+    - docker stop user-service || true
+    - docker rm user-service || true
+    - docker network rm $DOCKER_NETWORK || true
   artifacts:
     paths:
-      - zap_report.html
+      - user_service/zap_report.html
+    when: always
   allow_failure: true
   only:
     - merge_requests
