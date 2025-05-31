@@ -104,9 +104,9 @@ zap_scan:
     # Build and start the services using docker-compose
     - Write-Host "Building and starting services..."
     - cd user_service
+    # Create docker-compose file
     - |
-      # Create a temporary docker-compose file for testing
-      @"
+      $composeContent = @"
       version: '3.8'
       services:
         db6:
@@ -119,7 +119,7 @@ zap_scan:
           ports:
             - "5438:5432"
           networks:
-            - $DOCKER_NETWORK
+            - zap-network
 
         user-service:
           build:
@@ -135,7 +135,7 @@ zap_scan:
           depends_on:
             - db6
           networks:
-            - $DOCKER_NETWORK
+            - zap-network
           healthcheck:
             test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
             interval: 10s
@@ -143,9 +143,12 @@ zap_scan:
             retries: 5
 
       networks:
-        $DOCKER_NETWORK:
+        zap-network:
           external: true
-      "@ | Out-File -Encoding UTF8 docker-compose.test.yml
+      "@
+      Set-Content -Path "docker-compose.test.yml" -Value $composeContent
+    - Write-Host "Created docker-compose.test.yml"
+    - Get-Content docker-compose.test.yml
     - docker-compose -f docker-compose.test.yml up -d
     # Wait for the service to be ready
     - Write-Host "Waiting for service to be ready..."
@@ -180,7 +183,10 @@ zap_scan:
     - Write-Host "Cleaning up resources..."
     - |
       $ErrorActionPreference = 'SilentlyContinue'
-      docker-compose -f docker-compose.test.yml down
+      if (Test-Path "docker-compose.test.yml") {
+        docker-compose -f docker-compose.test.yml down
+        Remove-Item docker-compose.test.yml
+      }
       docker network rm $DOCKER_NETWORK
       $ErrorActionPreference = 'Continue'
   artifacts:
