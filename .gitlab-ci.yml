@@ -87,26 +87,17 @@ static_analysis:
 zap_scan:
   stage: security_testing
   script:
-    # Clean up any existing containers and networks
-    - Write-Host "Cleaning up any existing containers and networks..."
+    - Write-Host "Cleaning up zaproxy/zap-stable containers and network..."
     - |
       $ErrorActionPreference = 'SilentlyContinue'
-      # Force stop and remove all containers
-      Write-Host "Stopping all containers..."
-      docker ps -aq | ForEach-Object { docker stop $_ }
-      Write-Host "Removing all containers..."
-      docker ps -aq | ForEach-Object { docker rm -f $_ }
-      # Force remove network
-      Write-Host "Removing network..."
+      docker ps -a --filter "ancestor=zaproxy/zap-stable" --format "{{.ID}}" | ForEach-Object { docker stop $_ }
+      docker ps -a --filter "ancestor=zaproxy/zap-stable" --format "{{.ID}}" | ForEach-Object { docker rm -f $_ }
       docker network rm $DOCKER_NETWORK
       $ErrorActionPreference = 'Continue'
-    # Create Docker network
     - Write-Host "Creating Docker network..."
     - docker network create $DOCKER_NETWORK
-    # Build and start the services using docker-compose
     - Write-Host "Building and starting services..."
     - cd user_service
-    # Create docker-compose file
     - |
       $composeContent = @"
       version: '3.8'
@@ -157,18 +148,13 @@ zap_scan:
           external: true
       "@
       Set-Content -Path "docker-compose.test.yml" -Value $composeContent
-    - Write-Host "Created docker-compose.test.yml"
-    - Get-Content docker-compose.test.yml
-    # Start services
     - Write-Host "Starting services..."
     - docker-compose -f docker-compose.test.yml up -d
-    # Wait for the service to be ready
     - Write-Host "Waiting for service to be ready..."
     - |
       $maxAttempts = 30
       $attempt = 0
       $serviceUp = $false
-      
       while (-not $serviceUp -and $attempt -lt $maxAttempts) {
         $attempt++
         try {
@@ -179,43 +165,26 @@ zap_scan:
             break
           }
         } catch {
-          Write-Host "Waiting for service to start... ($attempt/$maxAttempts)"
-          # Check container logs for debugging
-          Write-Host "Container logs:"
-          docker logs user-service-${CONTAINER_ID}
           Start-Sleep -Seconds 2
         }
       }
-      
       if (-not $serviceUp) {
         Write-Host "Service failed to start within 60 seconds"
-        Write-Host "Container logs:"
-        docker logs user-service-${CONTAINER_ID}
         exit 1
       }
-    # Run ZAP scan
     - Write-Host "Running ZAP scan..."
     - docker run --network $DOCKER_NETWORK -v "${PWD}:/zap/wrk" -t zaproxy/zap-stable zap-baseline.py -t http://user-service-${CONTAINER_ID}:8087 -r zap_report.html
   after_script:
-    - Write-Host "Cleaning up resources..."
+    - Write-Host "Cleaning up zaproxy/zap-stable containers and network..."
     - |
       $ErrorActionPreference = 'SilentlyContinue'
       if (Test-Path "docker-compose.test.yml") {
-        Write-Host "Stopping containers..."
         docker-compose -f docker-compose.test.yml down --remove-orphans
         Remove-Item docker-compose.test.yml
       }
-      # Force stop and remove all containers
-      Write-Host "Force stopping all containers..."
-      docker ps -aq | ForEach-Object { docker stop $_ }
-      Write-Host "Force removing all containers..."
-      docker ps -aq | ForEach-Object { docker rm -f $_ }
-      # Force remove network
-      Write-Host "Force removing network..."
-      docker network rm $DOCKER_NETWORK
-      # Stop and remove only zaproxy/zap-stable containers
-      Write-Host "Removing zaproxy/zap-stable containers..."
+      docker ps -a --filter "ancestor=zaproxy/zap-stable" --format "{{.ID}}" | ForEach-Object { docker stop $_ }
       docker ps -a --filter "ancestor=zaproxy/zap-stable" --format "{{.ID}}" | ForEach-Object { docker rm -f $_ }
+      docker network rm $DOCKER_NETWORK
       $ErrorActionPreference = 'Continue'
   artifacts:
     paths:
