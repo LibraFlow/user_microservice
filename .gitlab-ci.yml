@@ -93,25 +93,20 @@ zap_scan:
       $ErrorActionPreference = 'SilentlyContinue'
       # Stop and remove all containers in the network
       docker ps -a --filter "network=$DOCKER_NETWORK" --format "{{.Names}}" | ForEach-Object {
-        Write-Host "Stopping container: $_"
-        docker stop $_
-        Write-Host "Removing container: $_"
-        docker rm $_
+        docker stop $_ | Out-Null
+        docker rm $_ | Out-Null
       }
       # Stop and remove any containers using our ports
       docker ps -a --filter "publish=8087" --filter "publish=8088" --format "{{.Names}}" | ForEach-Object {
-        Write-Host "Stopping container: $_"
-        docker stop $_
-        Write-Host "Removing container: $_"
-        docker rm $_
+        docker stop $_ | Out-Null
+        docker rm $_ | Out-Null
       }
       # Remove network if it exists
-      Write-Host "Removing network: $DOCKER_NETWORK"
-      docker network rm $DOCKER_NETWORK
+      docker network rm $DOCKER_NETWORK | Out-Null
       $ErrorActionPreference = 'Continue'
     # Create Docker network
     - Write-Host "Creating Docker network..."
-    - docker network create $DOCKER_NETWORK
+    - docker network create $DOCKER_NETWORK | Out-Null
     # Build and start the services using docker-compose
     - Write-Host "Building and starting services..."
     - cd user_service
@@ -167,17 +162,15 @@ zap_scan:
       "@
       Set-Content -Path "docker-compose.test.yml" -Value $composeContent
     - Write-Host "Created docker-compose.test.yml"
-    - Get-Content docker-compose.test.yml
-    # Start services
+    # Start services (quiet)
     - Write-Host "Starting services..."
-    - docker-compose -f docker-compose.test.yml up -d
+    - docker-compose -f docker-compose.test.yml up -d --quiet-pull
     # Wait for the service to be ready
     - Write-Host "Waiting for service to be ready..."
     - |
       $maxAttempts = 30
       $attempt = 0
       $serviceUp = $false
-      
       while (-not $serviceUp -and $attempt -lt $maxAttempts) {
         $attempt++
         try {
@@ -188,18 +181,15 @@ zap_scan:
             break
           }
         } catch {
-          Write-Host "Waiting for service to start... ($attempt/$maxAttempts)"
-          # Check container logs for debugging
-          Write-Host "Container logs:"
-          docker logs user-service-${CONTAINER_ID}
+          if ($attempt % 5 -eq 0) {
+            Write-Host "Waiting for service to start... ($attempt/$maxAttempts)"
+          }
           Start-Sleep -Seconds 2
         }
       }
-      
       if (-not $serviceUp) {
-        Write-Host "Service failed to start within 60 seconds"
-        Write-Host "Container logs:"
-        docker logs user-service-${CONTAINER_ID}
+        Write-Host "Service failed to start within 60 seconds. Showing last 40 lines of container logs:"
+        docker logs user-service-${CONTAINER_ID} --tail 40
         exit 1
       }
     # Run ZAP scan
@@ -210,21 +200,16 @@ zap_scan:
     - |
       $ErrorActionPreference = 'SilentlyContinue'
       if (Test-Path "docker-compose.test.yml") {
-        Write-Host "Stopping services..."
-        docker-compose -f docker-compose.test.yml down --remove-orphans
+        docker-compose -f docker-compose.test.yml down --remove-orphans --volumes | Out-Null
         Remove-Item docker-compose.test.yml
       }
       # Stop and remove all containers in the network
-      Write-Host "Stopping and removing containers..."
       docker ps -a --filter "network=$DOCKER_NETWORK" --format "{{.Names}}" | ForEach-Object {
-        Write-Host "Stopping container: $_"
-        docker stop $_
-        Write-Host "Removing container: $_"
-        docker rm $_
+        docker stop $_ | Out-Null
+        docker rm $_ | Out-Null
       }
       # Remove network
-      Write-Host "Removing network..."
-      docker network rm $DOCKER_NETWORK
+      docker network rm $DOCKER_NETWORK | Out-Null
       $ErrorActionPreference = 'Continue'
   artifacts:
     paths:
