@@ -96,6 +96,7 @@ zap_scan:
         docker stop $_
         docker rm $_
       }
+      # Force remove network if it exists
       docker network rm $DOCKER_NETWORK
       $ErrorActionPreference = 'Continue'
     # Create Docker network
@@ -120,6 +121,11 @@ zap_scan:
             - "5438:5432"
           networks:
             - zap-network
+          healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U user6 -d db6"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
 
         user-service:
           build:
@@ -132,8 +138,11 @@ zap_scan:
             - SPRING_DATASOURCE_URL=jdbc:postgresql://db6-${CONTAINER_ID}:5432/db6
             - SPRING_DATASOURCE_USERNAME=user6
             - SPRING_DATASOURCE_PASSWORD=password6
+            - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+            - SPRING_JPA_SHOW_SQL=true
           depends_on:
-            - db6
+            db6:
+              condition: service_healthy
           networks:
             - zap-network
           healthcheck:
@@ -149,6 +158,8 @@ zap_scan:
       Set-Content -Path "docker-compose.test.yml" -Value $composeContent
     - Write-Host "Created docker-compose.test.yml"
     - Get-Content docker-compose.test.yml
+    # Start services
+    - Write-Host "Starting services..."
     - docker-compose -f docker-compose.test.yml up -d
     # Wait for the service to be ready
     - Write-Host "Waiting for service to be ready..."
@@ -168,12 +179,17 @@ zap_scan:
           }
         } catch {
           Write-Host "Waiting for service to start... ($attempt/$maxAttempts)"
+          # Check container logs for debugging
+          Write-Host "Container logs:"
+          docker logs user-service-${CONTAINER_ID}
           Start-Sleep -Seconds 2
         }
       }
       
       if (-not $serviceUp) {
         Write-Host "Service failed to start within 60 seconds"
+        Write-Host "Container logs:"
+        docker logs user-service-${CONTAINER_ID}
         exit 1
       }
     # Run ZAP scan
@@ -184,9 +200,10 @@ zap_scan:
     - |
       $ErrorActionPreference = 'SilentlyContinue'
       if (Test-Path "docker-compose.test.yml") {
-        docker-compose -f docker-compose.test.yml down
+        docker-compose -f docker-compose.test.yml down --remove-orphans
         Remove-Item docker-compose.test.yml
       }
+      # Force remove network
       docker network rm $DOCKER_NETWORK
       $ErrorActionPreference = 'Continue'
   artifacts:
