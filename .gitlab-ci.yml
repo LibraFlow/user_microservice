@@ -89,15 +89,12 @@ zap_scan:
   script:
     # Clean up any previous runs
     - Write-Host "Cleaning up old containers and network..."
-    - |
-      $ErrorActionPreference = 'SilentlyContinue'
-      docker rm -f zap-db6 zap-user-service zap-zap || $true
-      docker network rm zap-net || $true
-      $ErrorActionPreference = 'Continue'
+    - docker rm -f zap-db6 zap-user-service zap-zap; $null = $?
+    - docker network rm zap-net; $null = $?
 
     # Create Docker network
     - Write-Host "Creating Docker network..."
-    - docker network create zap-net
+    - docker network create zap-net 2>$null
 
     # Start PostgreSQL
     - Write-Host "Starting PostgreSQL container..."
@@ -137,17 +134,14 @@ zap_scan:
         Start-Sleep -Seconds 2
       }
 
-    # Run ZAP scan (target the app container by its Docker network name and port)
+    # Run ZAP scan
     - Write-Host "Running ZAP scan..."
     - docker run --name zap-zap --network zap-net -v "${PWD}:/zap/wrk" -t zaproxy/zap-stable zap-baseline.py -t http://zap-user-service:8087 -r zap_report.html
 
   after_script:
     - Write-Host "Cleaning up containers and network..."
-    - |
-      $ErrorActionPreference = 'SilentlyContinue'
-      docker rm -f zap-db6 zap-user-service zap-zap || $true
-      docker network rm zap-net || $true
-      $ErrorActionPreference = 'Continue'
+    - docker rm -f zap-db6 zap-user-service zap-zap 2>$null
+    - docker network rm zap-net 2>$null
 
   artifacts:
     paths:
