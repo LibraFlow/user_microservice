@@ -101,11 +101,52 @@ zap_scan:
     # Create Docker network
     - Write-Host "Creating Docker network..."
     - docker network create $DOCKER_NETWORK
-    # Build and start the user service
-    - Write-Host "Building and starting user service..."
+    # Build and start the services using docker-compose
+    - Write-Host "Building and starting services..."
     - cd user_service
-    - docker build -t user-service:test .
-    - docker run -d --name user-service-${CONTAINER_ID} --network $DOCKER_NETWORK -p ${TEST_PORT}:8087 user-service:test
+    - |
+      # Create a temporary docker-compose file for testing
+      @"
+      version: '3.8'
+      services:
+        db6:
+          image: postgres:latest
+          container_name: db6-${CONTAINER_ID}
+          environment:
+            POSTGRES_USER: user6
+            POSTGRES_PASSWORD: password6
+            POSTGRES_DB: db6
+          ports:
+            - "5438:5432"
+          networks:
+            - $DOCKER_NETWORK
+
+        user-service:
+          build:
+            context: .
+            dockerfile: Dockerfile
+          container_name: user-service-${CONTAINER_ID}
+          ports:
+            - "${TEST_PORT}:8087"
+          environment:
+            - SPRING_DATASOURCE_URL=jdbc:postgresql://db6-${CONTAINER_ID}:5432/db6
+            - SPRING_DATASOURCE_USERNAME=user6
+            - SPRING_DATASOURCE_PASSWORD=password6
+          depends_on:
+            - db6
+          networks:
+            - $DOCKER_NETWORK
+          healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+      networks:
+        $DOCKER_NETWORK:
+          external: true
+      "@ | Out-File -Encoding UTF8 docker-compose.test.yml
+    - docker-compose -f docker-compose.test.yml up -d
     # Wait for the service to be ready
     - Write-Host "Waiting for service to be ready..."
     - |
@@ -139,8 +180,7 @@ zap_scan:
     - Write-Host "Cleaning up resources..."
     - |
       $ErrorActionPreference = 'SilentlyContinue'
-      docker stop user-service-${CONTAINER_ID}
-      docker rm user-service-${CONTAINER_ID}
+      docker-compose -f docker-compose.test.yml down
       docker network rm $DOCKER_NETWORK
       $ErrorActionPreference = 'Continue'
   artifacts:
