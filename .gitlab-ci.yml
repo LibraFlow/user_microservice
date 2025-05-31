@@ -91,12 +91,22 @@ zap_scan:
     - Write-Host "Cleaning up any existing containers and networks..."
     - |
       $ErrorActionPreference = 'SilentlyContinue'
-      # Stop and remove any existing containers using port 8087 or 8088
-      docker ps -a --filter "publish=8087" --filter "publish=8088" --format "{{.Names}}" | ForEach-Object {
+      # Stop and remove all containers in the network
+      docker ps -a --filter "network=$DOCKER_NETWORK" --format "{{.Names}}" | ForEach-Object {
+        Write-Host "Stopping container: $_"
         docker stop $_
+        Write-Host "Removing container: $_"
         docker rm $_
       }
-      # Force remove network if it exists
+      # Stop and remove any containers using our ports
+      docker ps -a --filter "publish=8087" --filter "publish=8088" --format "{{.Names}}" | ForEach-Object {
+        Write-Host "Stopping container: $_"
+        docker stop $_
+        Write-Host "Removing container: $_"
+        docker rm $_
+      }
+      # Remove network if it exists
+      Write-Host "Removing network: $DOCKER_NETWORK"
       docker network rm $DOCKER_NETWORK
       $ErrorActionPreference = 'Continue'
     # Create Docker network
@@ -200,10 +210,20 @@ zap_scan:
     - |
       $ErrorActionPreference = 'SilentlyContinue'
       if (Test-Path "docker-compose.test.yml") {
+        Write-Host "Stopping services..."
         docker-compose -f docker-compose.test.yml down --remove-orphans
         Remove-Item docker-compose.test.yml
       }
-      # Force remove network
+      # Stop and remove all containers in the network
+      Write-Host "Stopping and removing containers..."
+      docker ps -a --filter "network=$DOCKER_NETWORK" --format "{{.Names}}" | ForEach-Object {
+        Write-Host "Stopping container: $_"
+        docker stop $_
+        Write-Host "Removing container: $_"
+        docker rm $_
+      }
+      # Remove network
+      Write-Host "Removing network..."
       docker network rm $DOCKER_NETWORK
       $ErrorActionPreference = 'Continue'
   artifacts:
