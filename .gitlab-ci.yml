@@ -16,6 +16,8 @@ variables:
   DOCKER_NETWORK: zap-network
   # Add unique identifier for containers
   CONTAINER_ID: ${CI_PIPELINE_ID}
+  # Add test port
+  TEST_PORT: 8088
 
 cache:
   paths:
@@ -89,8 +91,11 @@ zap_scan:
     - Write-Host "Cleaning up any existing containers and networks..."
     - |
       $ErrorActionPreference = 'SilentlyContinue'
-      docker stop user-service-${CONTAINER_ID}
-      docker rm user-service-${CONTAINER_ID}
+      # Stop and remove any existing containers using port 8087 or 8088
+      docker ps -a --filter "publish=8087" --filter "publish=8088" --format "{{.Names}}" | ForEach-Object {
+        docker stop $_
+        docker rm $_
+      }
       docker network rm $DOCKER_NETWORK
       $ErrorActionPreference = 'Continue'
     # Create Docker network
@@ -100,7 +105,7 @@ zap_scan:
     - Write-Host "Building and starting user service..."
     - cd user_service
     - docker build -t user-service:test .
-    - docker run -d --name user-service-${CONTAINER_ID} --network $DOCKER_NETWORK -p 8087:8087 user-service:test
+    - docker run -d --name user-service-${CONTAINER_ID} --network $DOCKER_NETWORK -p ${TEST_PORT}:8087 user-service:test
     # Wait for the service to be ready
     - Write-Host "Waiting for service to be ready..."
     - |
@@ -111,7 +116,7 @@ zap_scan:
       while (-not $serviceUp -and $attempt -lt $maxAttempts) {
         $attempt++
         try {
-          $response = Invoke-WebRequest -Uri "http://localhost:8087/actuator/health" -UseBasicParsing -TimeoutSec 2
+          $response = Invoke-WebRequest -Uri "http://localhost:${TEST_PORT}/actuator/health" -UseBasicParsing -TimeoutSec 2
           if ($response.Content -match '"status":"UP"') {
             Write-Host "Service is up!"
             $serviceUp = $true
