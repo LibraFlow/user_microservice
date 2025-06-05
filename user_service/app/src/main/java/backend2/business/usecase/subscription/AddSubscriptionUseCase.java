@@ -9,6 +9,8 @@ import backend2.persistence.entity.UserEntity;
 import backend2.business.mapper.SubscriptionMapper;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,7 @@ public class AddSubscriptionUseCase {
     private final SubscriptionRepository subscriptionRepository;
     private final UserRepository userRepository;
     private final SubscriptionMapper subscriptionMapper;
+    private final Logger logger = LoggerFactory.getLogger(AddSubscriptionUseCase.class);
 
     @Transactional
     public SubscriptionDTO addSubscription(Integer userId, SubscriptionType type) {
@@ -67,6 +70,9 @@ public class AddSubscriptionUseCase {
                 .build();
 
         SubscriptionEntity savedSubscription = subscriptionRepository.save(subscription);
+        // Audit log: userId, subscriptionId, timestamp
+        logger.info("AUDIT: Subscription added - userId={}, subscriptionId={}, timestamp={}",
+            userId, savedSubscription.getId(), java.time.Instant.now());
         return subscriptionMapper.toDTO(savedSubscription);
     }
 } 
