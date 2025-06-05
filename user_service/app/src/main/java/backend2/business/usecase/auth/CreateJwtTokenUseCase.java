@@ -7,6 +7,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
+import org.springframework.core.env.Environment;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -16,6 +17,12 @@ import java.util.Date;
 public class CreateJwtTokenUseCase {
     @Value("${JWT_SECRET:12345678901234567890123456789012}")
     private String jwtSecret;
+
+    private final Environment environment;
+
+    public CreateJwtTokenUseCase(Environment environment) {
+        this.environment = environment;
+    }
 
     public String createToken(UserDTO user) {
         SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
@@ -31,9 +38,12 @@ public class CreateJwtTokenUseCase {
     }
 
     public ResponseCookie createJwtCookie(String jwt) {
+        boolean isProd = environment.getActiveProfiles().length > 0 && 
+                        environment.getActiveProfiles()[0].equals("prod");
+        
         return ResponseCookie.from("jwt", jwt)
             .httpOnly(true)
-            .secure(false)
+            .secure(isProd)
             .path("/")
             .sameSite("Lax")
             .maxAge(3600)
