@@ -136,11 +136,6 @@ zap_scan:
       while ($attempt -lt $maxAttempts) {
         $attempt++
         try {
-          # Check container logs for any startup issues
-          Write-Host "Checking container logs..."
-          docker logs zap-user-service
-          
-          # Try to access the service
           $response = Invoke-WebRequest -Uri "http://localhost:8088/actuator/health" -UseBasicParsing -TimeoutSec 2
           if ($response.Content -match '"status":"UP"') { 
             Write-Host "Service is healthy"
@@ -148,9 +143,13 @@ zap_scan:
           }
         } catch { 
           Write-Host "Waiting for service to be ready... Attempt $attempt of $maxAttempts"
-          Write-Host "Error: $_"
         }
         Start-Sleep -Seconds 2
+      }
+      # Only print logs if service did not become healthy
+      if ($attempt -eq $maxAttempts) {
+        Write-Host "Service did not become healthy. Printing container logs:"
+        docker logs zap-user-service
       }
 
     # Register test user (ignore errors if already exists)
