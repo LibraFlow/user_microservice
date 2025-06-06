@@ -120,89 +120,23 @@ zap_scan:
     - Write-Host "Starting user-service container..."
     - docker run -d --name zap-user-service --network zap-net -e SPRING_DATASOURCE_URL=jdbc:postgresql://zap-db6:5432/db6 -e SPRING_DATASOURCE_USERNAME=user6 -e SPRING_DATASOURCE_PASSWORD=password6 -p 8088:8087 zap-user-service
 
-    # Wait for app to be healthy and verify it's responding
+    # Wait for app to be healthy
     - Write-Host "Waiting for user-service to be healthy..."
     - |
-      # First, wait a bit for the service to start
-      Start-Sleep -Seconds 10
-      
       $maxAttempts = 30
       $attempt = 0
       while ($attempt -lt $maxAttempts) {
         $attempt++
         try {
           $response = Invoke-WebRequest -Uri "http://localhost:8088/actuator/health" -UseBasicParsing -TimeoutSec 2
-          if ($response.Content -match '"status":"UP"') { 
-            Write-Host "Service is healthy"
-            break 
-          }
-        } catch { 
-          Write-Host "Waiting for service to be ready... Attempt $attempt of $maxAttempts"
-        }
+          if ($response.Content -match '"status":"UP"') { break }
+        } catch { }
         Start-Sleep -Seconds 2
       }
-      # Only print logs if service did not become healthy
-      if ($attempt -eq $maxAttempts) {
-        Write-Host "Service did not become healthy. Printing container logs:"
-        docker logs zap-user-service
-      }
 
-    # Register test user (ignore errors if already exists)
-    - Write-Host "Registering test user..."
-    - |
-      $registerBody = @{ 
-        username = "testuser77"; 
-        pwd = "testpassword77"; 
-        email = "testuser77@example.com"; 
-        address = "123 Test St"; 
-        phone = "+1234567890"; 
-        roles = @("ADMINISTRATOR") 
-      } | ConvertTo-Json
-      try {
-        $response = Invoke-RestMethod -Uri "http://localhost:8088/api/v1/auth" -Method Post -Body $registerBody -ContentType "application/json"
-        Write-Host "User registered successfully"
-      } catch { 
-        Write-Host "User may already exist, continuing..." 
-      }
-
-    # Login to get JWT
-    - Write-Host "Logging in to get JWT..."
-    - |
-      $loginBody = @{ username = "testuser77"; pwd = "testpassword77" } | ConvertTo-Json
-      $response = Invoke-RestMethod -Uri "http://localhost:8088/api/v1/auth/login" -Method Post -Body $loginBody -ContentType "application/json"
-      $env:JWT_TOKEN = $response.token
-      Write-Host "JWT obtained successfully"
-
-    # Verify JWT works by testing a protected endpoint
-    - Write-Host "Verifying JWT token..."
-    - |
-      try {
-        $headers = @{
-          "Authorization" = "Bearer $env:JWT_TOKEN"
-        }
-        # Try a different endpoint that should be accessible to administrators
-        $response = Invoke-RestMethod -Uri "http://localhost:8088/api/v1/users" -Headers $headers -Method Get
-        Write-Host "JWT verification successful"
-      } catch {
-        Write-Host "JWT verification failed: $_"
-        Write-Host "Container logs at time of failure:"
-        docker logs zap-user-service
-        exit 1
-      }
-
-    # Run ZAP scan with JWT in Authorization header
+    # Run ZAP scan
     - Write-Host "Running ZAP scan..."
-    - |
-      $zapConfig = @{
-        "http.session.default.headers" = @(
-          @{
-            "name" = "Authorization"
-            "value" = "Bearer $env:JWT_TOKEN"
-          }
-        )
-      } | ConvertTo-Json -Compress
-      
-      docker run --name zap-zap --network zap-net -v "${PWD}:/zap/wrk" -t zaproxy/zap-stable zap-baseline.py -t http://zap-user-service:8087 -r zap_report.html -z "-config '$zapConfig'"
+    - docker run --name zap-zap --network zap-net -v "${PWD}:/zap/wrk" -t zaproxy/zap-stable zap-baseline.py -t http://zap-user-service:8087 -r zap_report.html
 
   after_script:
     - Write-Host "Cleaning up containers and network..."
