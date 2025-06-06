@@ -109,13 +109,8 @@ zap_scan:
         $attempt++
         try {
           docker exec zap-db6 pg_isready -U user6 -d db6
-          if ($LASTEXITCODE -eq 0) { 
-            Write-Host "Database is ready"
-            break 
-          }
-        } catch { 
-          Write-Host "Waiting for database... Attempt $attempt of $maxAttempts"
-        }
+          if ($LASTEXITCODE -eq 0) { break }
+        } catch { }
         Start-Sleep -Seconds 2
       }
 
