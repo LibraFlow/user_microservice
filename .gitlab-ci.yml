@@ -120,7 +120,7 @@ zap_scan:
     - Write-Host "Starting user-service container..."
     - docker run -d --name zap-user-service --network zap-net -e SPRING_DATASOURCE_URL=jdbc:postgresql://zap-db6:5432/db6 -e SPRING_DATASOURCE_USERNAME=user6 -e SPRING_DATASOURCE_PASSWORD=password6 -p 8088:8087 zap-user-service
 
-    # Wait for app to be healthy
+    # Wait for app to be healthy and verify it's responding
     - Write-Host "Waiting for user-service to be healthy..."
     - |
       $maxAttempts = 30
@@ -129,8 +129,13 @@ zap_scan:
         $attempt++
         try {
           $response = Invoke-WebRequest -Uri "http://localhost:8088/actuator/health" -UseBasicParsing -TimeoutSec 2
-          if ($response.Content -match '"status":"UP"') { break }
-        } catch { }
+          if ($response.Content -match '"status":"UP"') { 
+            Write-Host "Service is healthy"
+            break 
+          }
+        } catch { 
+          Write-Host "Waiting for service to be ready... Attempt $attempt of $maxAttempts"
+        }
         Start-Sleep -Seconds 2
       }
 
@@ -146,8 +151,11 @@ zap_scan:
         roles = @("ADMINISTRATOR") 
       } | ConvertTo-Json
       try {
-        Invoke-RestMethod -Uri "http://localhost:8088/api/v1/auth" -Method Post -Body $registerBody -ContentType "application/json"
-      } catch { Write-Host "User may already exist, continuing..." }
+        $response = Invoke-RestMethod -Uri "http://localhost:8088/api/v1/auth" -Method Post -Body $registerBody -ContentType "application/json"
+        Write-Host "User registered successfully"
+      } catch { 
+        Write-Host "User may already exist, continuing..." 
+      }
 
     # Login to get JWT
     - Write-Host "Logging in to get JWT..."
@@ -155,11 +163,35 @@ zap_scan:
       $loginBody = @{ username = "testuser77"; pwd = "testpassword77" } | ConvertTo-Json
       $response = Invoke-RestMethod -Uri "http://localhost:8088/api/v1/auth/login" -Method Post -Body $loginBody -ContentType "application/json"
       $env:JWT_TOKEN = $response.token
-      Write-Host "JWT: $env:JWT_TOKEN"
+      Write-Host "JWT obtained successfully"
+
+    # Verify JWT works by testing a protected endpoint
+    - Write-Host "Verifying JWT token..."
+    - |
+      try {
+        $headers = @{
+          "Authorization" = "Bearer $env:JWT_TOKEN"
+        }
+        $response = Invoke-RestMethod -Uri "http://localhost:8088/api/v1/users/1" -Headers $headers -Method Get
+        Write-Host "JWT verification successful"
+      } catch {
+        Write-Host "JWT verification failed: $_"
+        exit 1
+      }
 
     # Run ZAP scan with JWT in Authorization header
     - Write-Host "Running ZAP scan..."
-    - docker run --name zap-zap --network zap-net -v "${PWD}:/zap/wrk" -t zaproxy/zap-stable zap-baseline.py -t http://zap-user-service:8087 -r zap_report.html -z "-config 'http.session.default.headers=[{\"name\":\"Authorization\",\"value\":\"Bearer $env:JWT_TOKEN\"}]'"
+    - |
+      $zapConfig = @{
+        "http.session.default.headers" = @(
+          @{
+            "name" = "Authorization"
+            "value" = "Bearer $env:JWT_TOKEN"
+          }
+        )
+      } | ConvertTo-Json -Compress
+      
+      docker run --name zap-zap --network zap-net -v "${PWD}:/zap/wrk" -t zaproxy/zap-stable zap-baseline.py -t http://zap-user-service:8087 -r zap_report.html -z "-config '$zapConfig'"
 
   after_script:
     - Write-Host "Cleaning up containers and network..."
