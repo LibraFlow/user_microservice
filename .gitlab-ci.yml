@@ -109,8 +109,13 @@ zap_scan:
         $attempt++
         try {
           docker exec zap-db6 pg_isready -U user6 -d db6
-          if ($LASTEXITCODE -eq 0) { break }
-        } catch { }
+          if ($LASTEXITCODE -eq 0) { 
+            Write-Host "Database is ready"
+            break 
+          }
+        } catch { 
+          Write-Host "Waiting for database... Attempt $attempt of $maxAttempts"
+        }
         Start-Sleep -Seconds 2
       }
 
@@ -123,11 +128,19 @@ zap_scan:
     # Wait for app to be healthy and verify it's responding
     - Write-Host "Waiting for user-service to be healthy..."
     - |
+      # First, wait a bit for the service to start
+      Start-Sleep -Seconds 10
+      
       $maxAttempts = 30
       $attempt = 0
       while ($attempt -lt $maxAttempts) {
         $attempt++
         try {
+          # Check container logs for any startup issues
+          Write-Host "Checking container logs..."
+          docker logs zap-user-service
+          
+          # Try to access the service
           $response = Invoke-WebRequest -Uri "http://localhost:8088/actuator/health" -UseBasicParsing -TimeoutSec 2
           if ($response.Content -match '"status":"UP"') { 
             Write-Host "Service is healthy"
@@ -135,6 +148,7 @@ zap_scan:
           }
         } catch { 
           Write-Host "Waiting for service to be ready... Attempt $attempt of $maxAttempts"
+          Write-Host "Error: $_"
         }
         Start-Sleep -Seconds 2
       }
@@ -172,10 +186,13 @@ zap_scan:
         $headers = @{
           "Authorization" = "Bearer $env:JWT_TOKEN"
         }
-        $response = Invoke-RestMethod -Uri "http://localhost:8088/api/v1/users/1" -Headers $headers -Method Get
+        # Try a different endpoint that should be accessible to administrators
+        $response = Invoke-RestMethod -Uri "http://localhost:8088/api/v1/users" -Headers $headers -Method Get
         Write-Host "JWT verification successful"
       } catch {
         Write-Host "JWT verification failed: $_"
+        Write-Host "Container logs at time of failure:"
+        docker logs zap-user-service
         exit 1
       }
 
