@@ -101,9 +101,9 @@ zap_scan:
     - Write-Host "Creating Docker network..."
     - docker network create zap-net 2>$null
 
-    # Start PostgreSQL
+    # Start PostgreSQL with hardcoded credentials
     - Write-Host "Starting PostgreSQL container..."
-    - docker run -d --name zap-db6 --network zap-net -e POSTGRES_USER=${SPRING_DATASOURCE_USERNAME} -e POSTGRES_PASSWORD=${SPRING_DATASOURCE_PASSWORD} -e POSTGRES_DB=${SPRING_DATASOURCE_DATABASE} -p 5438:5432 postgres:latest
+    - docker run -d --name zap-db6 --network zap-net -e POSTGRES_USER=user6 -e POSTGRES_PASSWORD=password6 -e POSTGRES_DB=db6 -p 5438:5432 postgres:latest
 
     # Wait for DB to be ready
     - Write-Host "Waiting for DB to be ready..."
@@ -113,44 +113,34 @@ zap_scan:
       while ($attempt -lt $maxAttempts) {
         $attempt++
         try {
-          docker exec zap-db6 pg_isready -U ${SPRING_DATASOURCE_USERNAME} -d ${SPRING_DATASOURCE_DATABASE}
+          docker exec zap-db6 pg_isready -U user6 -d db6
           if ($LASTEXITCODE -eq 0) { break }
         } catch { }
         Start-Sleep -Seconds 2
       }
 
-    # Build and start your app
+    # Build and start your app with hardcoded DB connection for zap-net
     - Write-Host "Building user-service image..."
     - docker build -t zap-user-service ./user_service
     - Write-Host "Starting user-service container..."
-    - docker run -d --name zap-user-service --network zap-net `
-        -e SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL} `
-        -e SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME} `
-        -e SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD} `
-        -e JWT_SECRET=${JWT_SECRET} `
-        -e ENCRYPTION_KEY=${ENCRYPTION_KEY} `
-        -e KEYPART_ONE=${KEYPART_ONE} `
-        -e KEYPART_TWO=${KEYPART_TWO} `
-        -p 8088:8087 zap-user-service
+    - docker run -d --name zap-user-service --network zap-net -e SPRING_DATASOURCE_URL=jdbc:postgresql://zap-db6:5432/db6 -e SPRING_DATASOURCE_USERNAME=user6 -e SPRING_DATASOURCE_PASSWORD=password6 -p 8088:8087 zap-user-service
 
-    # Wait for app to be healthy from inside the Docker network
-    - Write-Host "Waiting for user-service to be healthy (from zap-net)..."
+    # Wait for app to be healthy
+    - Write-Host "Waiting for user-service to be healthy..."
     - |
       $maxAttempts = 30
       $attempt = 0
       while ($attempt -lt $maxAttempts) {
         $attempt++
         try {
-          docker run --rm --network zap-net curlimages/curl:latest curl -s http://zap-user-service:8087/actuator/health | Select-String '"status":"UP"'
-          if ($?) { break }
+          $response = Invoke-WebRequest -Uri "http://localhost:8088/actuator/health" -UseBasicParsing -TimeoutSec 2
+          if ($response.Content -match '"status":"UP"') { break }
         } catch { }
         Start-Sleep -Seconds 2
       }
 
     # Run ZAP scan
     - Write-Host "Running ZAP scan..."
-    - docker ps -a
-    - docker logs zap-user-service
     - docker run --name zap-zap --network zap-net -v "${PWD}:/zap/wrk" -t zaproxy/zap-stable zap-baseline.py -t http://zap-user-service:8087 -r zap_report.html
 
   after_script:
