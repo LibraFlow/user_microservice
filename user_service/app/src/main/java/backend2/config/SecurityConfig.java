@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 @Configuration
 public class SecurityConfig {
 
-    @Value("${JWT_SECRET:12345678901234567890123456789012}")
+    @Value("${JWT_SECRET:CHANGEME_JWT_SECRET}")
     private String jwtSecret;
 
     @Bean

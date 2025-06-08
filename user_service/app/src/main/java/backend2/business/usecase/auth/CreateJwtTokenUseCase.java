@@ -15,7 +15,7 @@ import java.util.Date;
 
 @Service
 public class CreateJwtTokenUseCase {
-    @Value("${JWT_SECRET:12345678901234567890123456789012}")
+    @Value("${JWT_SECRET:CHANGEME_JWT_SECRET}")
     private String jwtSecret;
 
     private final Environment environment;
