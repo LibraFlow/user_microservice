@@ -148,7 +148,13 @@ zap_scan:
 
     # Run ZAP scan
     - Write-Host "Running ZAP scan..."
+    - docker ps -a
+    - docker logs zap-user-service
+    - docker logs zap-db6
+    - docker exec zap-user-service ping -c 3 zap-db6
+    - docker exec zap-zap ping -c 3 zap-user-service
     - docker run --name zap-zap --network zap-net -v "${PWD}:/zap/wrk" -t zaproxy/zap-stable zap-baseline.py -t http://zap-user-service:8087 -r zap_report.html
+    - docker run --rm --network zap-net curlimages/curl:latest curl http://zap-user-service:8087/actuator/health
 
   after_script:
     - Write-Host "Cleaning up containers and network..."
