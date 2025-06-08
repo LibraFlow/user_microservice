@@ -214,10 +214,13 @@ docker_build:
 container_scan:
   stage: security_testing_1
   script:
+    - mkdir -p trivy-tools
+    - cd trivy-tools
     - Invoke-WebRequest -Uri "https://github.com/aquasecurity/trivy/releases/download/v0.51.2/trivy_0.51.2_Windows-64bit.zip" -OutFile "trivy.zip"
-    - Expand-Archive -Path "trivy.zip" -DestinationPath "."
+    - Expand-Archive -Path "trivy.zip" -DestinationPath "." -Force
+    - cd ..
     - docker pull $DOCKER_IMAGE
-    - .\trivy.exe image --format json --output trivy-report.json $DOCKER_IMAGE
+    - .\trivy-tools\trivy.exe image --format json --output trivy-report.json $DOCKER_IMAGE
   artifacts:
     paths:
       - trivy-report.json
