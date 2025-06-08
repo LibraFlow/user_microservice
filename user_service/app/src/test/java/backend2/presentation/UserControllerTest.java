@@ -169,6 +169,30 @@ public class UserControllerTest {
         verify(updateUserUseCase, times(1)).updateUser(1, testUserDTO, true);
     }
 
+    @Test
+    void userCannotAccessAnotherUsersData() {
+        setupSecurityContext();
+        when(jwt.getClaim("userId")).thenReturn(1);
+        when(authentication.getPrincipal()).thenReturn(jwt);
+        Set<GrantedAuthority> authorities = new HashSet<>();
+        authorities.add(new SimpleGrantedAuthority("ROLE_CUSTOMER"));
+        doReturn(authorities).when(authentication).getAuthorities();
+        // Simulate user 1 trying to access user 2's data
+        ResponseEntity<UserDTO> response = userController.getUser(2);
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    }
+
+    @Test
+    void basicUserCannotAccessAdminEndpoint() {
+        setupSecurityContext();
+        Set<GrantedAuthority> authorities = new HashSet<>();
+        authorities.add(new SimpleGrantedAuthority("ROLE_CUSTOMER"));
+        doReturn(authorities).when(authentication).getAuthorities();
+        // Simulate basic user trying to get all users (admin-only)
+        ResponseEntity<List<UserDTO>> response = userController.getAllUsers();
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    }
+
     @AfterEach
     void clearSecurityContext() {
         SecurityContextHolder.clearContext();
