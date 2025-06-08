@@ -52,13 +52,22 @@ static_analysis:
       - user_service/app/build/reports/spotbugs/
   allow_failure: true  # Allow the stage to fail without stopping the pipeline
 
+build:
+  stage: build
+  image: gradle:jdk17
+  script:
+    - cd user_service
+    - gradle build
+  artifacts:
+    paths:
+      - user_service/app/build/libs/*.jar
+
 dependency_check:
   stage: security_testing
+  dependencies:
+    - build
   script:
-    - powershell -Command "Invoke-WebRequest -Uri 'https://github.com/jeremylong/DependencyCheck/releases/download/v12.1.0/dependency-check-12.1.0-release.zip' -OutFile 'dependency-check.zip'"
-    - powershell -Command "Expand-Archive -Path 'dependency-check.zip' -DestinationPath 'dependency-check'"
-    - mkdir -p dependency-check-report
-    - powershell -Command "& 'dependency-check/dependency-check/bin/dependency-check.bat' --project 'user-service' --scan 'user_service/app' --format 'ALL' --out 'dependency-check-report'"
+    - powershell -Command "& 'dependency-check/dependency-check/bin/dependency-check.bat' --project 'user-service' --scan 'user_service/app' --format 'ALL' --out 'dependency-check-report' --nvdApiKey $env:NVD_API_KEY"
   artifacts:
     when: always
     expire_in: 1 week
@@ -151,19 +160,6 @@ zap_scan:
   only:
     - merge_requests
     - main
-
-build:
-  stage: build
-  image: gradle:jdk17
-  script:
-  - cd user_service
-  - gradle build
-  artifacts:
-    paths:
-    - user_service/app/build/libs/*.jar
-  dependencies:
-  - static_analysis
-  - dependency_check
 
 test:
   stage: test
