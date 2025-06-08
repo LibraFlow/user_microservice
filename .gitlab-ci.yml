@@ -123,11 +123,7 @@ zap_scan:
     - Write-Host "Building user-service image..."
     - docker build -t zap-user-service ./user_service
     - Write-Host "Starting user-service container..."
-    - docker run -d --name zap-user-service --network zap-net \
-      -e SPRING_DATASOURCE_URL=jdbc:postgresql://zap-db6:5432/db6 \
-      -e SPRING_DATASOURCE_USERNAME=username6 \
-      -e SPRING_DATASOURCE_PASSWORD=password6 \
-      -p 8088:8087 zap-user-service
+    - docker run -d --name zap-user-service --network zap-net -e SPRING_DATASOURCE_URL=jdbc:postgresql://zap-db6:5432/db6 -e SPRING_DATASOURCE_USERNAME=username6 -e SPRING_DATASOURCE_PASSWORD=password6 -p 8088:8087 zap-user-service
 
     # Wait for app to be healthy
     - Write-Host "Waiting for user-service to be healthy..."
