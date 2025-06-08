@@ -90,7 +90,7 @@ dependency_check:
   allow_failure: true
 
 zap_scan:
-  stage: security_testing
+  stage: security_testing_1
   script:
     # Clean up any previous runs
     - Write-Host "Cleaning up old containers and network..."
@@ -103,7 +103,10 @@ zap_scan:
 
     # Start PostgreSQL
     - Write-Host "Starting PostgreSQL container..."
-    - docker run -d --name zap-db6 --network zap-net -e POSTGRES_USER=$SPRING_DATASOURCE_USERNAME -e POSTGRES_PASSWORD=$SPRING_DATASOURCE_PASSWORD -e POSTGRES_DB=db6 -p 5438:5432 postgres:latest
+    - docker run -d --name zap-db6 --network zap-net `
+        -e POSTGRES_USER="$env:SPRING_DATASOURCE_USERNAME" `
+        -e POSTGRES_PASSWORD="$env:SPRING_DATASOURCE_PASSWORD" `
+        -e POSTGRES_DB=db6 -p 5438:5432 postgres:latest
 
     # Wait for DB to be ready
     - Write-Host "Waiting for DB to be ready..."
@@ -123,7 +126,11 @@ zap_scan:
     - Write-Host "Building user-service image..."
     - docker build -t zap-user-service ./user_service
     - Write-Host "Starting user-service container..."
-    - docker run -d --name zap-user-service --network zap-net -e SPRING_DATASOURCE_URL=jdbc:postgresql://zap-db6:5432/db6 -e SPRING_DATASOURCE_USERNAME=$SPRING_DATASOURCE_USERNAME -e SPRING_DATASOURCE_PASSWORD=$SPRING_DATASOURCE_PASSWORD -p 8088:8087 zap-user-service
+    - docker run -d --name zap-user-service --network zap-net `
+        -e SPRING_DATASOURCE_URL="jdbc:postgresql://zap-db6:5432/db6" `
+        -e SPRING_DATASOURCE_USERNAME="$env:SPRING_DATASOURCE_USERNAME" `
+        -e SPRING_DATASOURCE_PASSWORD="$env:SPRING_DATASOURCE_PASSWORD" `
+        -p 8088:8087 zap-user-service
 
     # Wait for app to be healthy
     - Write-Host "Waiting for user-service to be healthy..."
@@ -228,10 +235,3 @@ container_scan:
   allow_failure: true
   dependencies:
     - docker_build
-
-script:
-  - |
-    Write-Host "The username is $env:SPRING_DATASOURCE_USERNAME"
-    # Example: using in a PowerShell command
-    $username = $env:SPRING_DATASOURCE_USERNAME
-    Write-Host "Connecting as $username"
