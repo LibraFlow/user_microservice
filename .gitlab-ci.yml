@@ -188,3 +188,10 @@ container_scan:
   allow_failure: true
   dependencies:
     - docker_build
+
+script:
+  - |
+    Write-Host "The username is $env:SPRING_DATASOURCE_USERNAME"
+    # Example: using in a PowerShell command
+    $username = $env:SPRING_DATASOURCE_USERNAME
+    Write-Host "Connecting as $username"
