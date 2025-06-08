@@ -138,14 +138,14 @@ zap_scan:
     - Write-Host "Building user-service image..."
     - docker build -t zap-user-service ./user_service
     - Write-Host "Starting user-service container..."
-    - docker run -d --name zap-user-service --network zap-net \
-        -e SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL} \
-        -e SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME} \
-        -e SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD} \
-        -e JWT_SECRET=${JWT_SECRET} \
-        -e ENCRYPTION_KEY=${ENCRYPTION_KEY} \
-        -e KEYPART_ONE=${KEYPART_ONE} \
-        -e KEYPART_TWO=${KEYPART_TWO} \
+    - docker run -d --name zap-user-service --network zap-net `
+        -e SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL} `
+        -e SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME} `
+        -e SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD} `
+        -e JWT_SECRET=${JWT_SECRET} `
+        -e ENCRYPTION_KEY=${ENCRYPTION_KEY} `
+        -e KEYPART_ONE=${KEYPART_ONE} `
+        -e KEYPART_TWO=${KEYPART_TWO} `
         -p 8088:8087 zap-user-service
 
     # Wait for app to be healthy
