@@ -68,6 +68,8 @@ dependency_check:
     - build
   script:
     - echo "Running dependency check"
+    - powershell -Command "Invoke-WebRequest -Uri 'https://github.com/jeremylong/DependencyCheck/releases/download/v12.1.0/dependency-check-12.1.0-release.zip' -OutFile 'dependency-check.zip'"
+    - powershell -Command "Expand-Archive -Path 'dependency-check.zip' -DestinationPath 'dependency-check'"
     - powershell -Command "& 'dependency-check/dependency-check/bin/dependency-check.bat' --project 'user-service' --scan 'user_service/app' --format 'ALL' --out 'dependency-check-report' --nvdApiKey $env:NVD_API_KEY"
   artifacts:
     when: always
