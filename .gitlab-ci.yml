@@ -241,3 +241,15 @@ container_scan:
   allow_failure: true
   dependencies:
     - docker_build
+
+secrets_scan:
+  stage: security_testing_1
+  image: gitguardian/ggshield:latest
+  script:
+    - ggshield secret scan repo .
+  variables:
+    GITGUARDIAN_API_KEY: $GITGUARDIAN_API_KEY
+  allow_failure: false
+  only:
+    - merge_requests
+    - main
