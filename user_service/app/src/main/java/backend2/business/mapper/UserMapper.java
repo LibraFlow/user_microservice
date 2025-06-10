@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.stream.Collectors;
+
+import backend2.domain.Role;
 
 @Component
 @RequiredArgsConstructor
@@ -28,7 +31,7 @@ public class UserMapper {
                 .email(encryptionService.decrypt(entity.getEmail()))
                 .address(encryptionService.decrypt(entity.getAddress()))
                 .phone(encryptionService.decrypt(entity.getPhone()))
-                .roles(entity.getRoles())
+                .roles(entity.getRoles().stream().map(Role::name).collect(Collectors.toSet()))
                 .deleted(entity.isDeleted())
                 .build();
     }
@@ -45,7 +48,7 @@ public class UserMapper {
                 .email(encryptionService.encrypt(dto.getEmail()))
                 .address(encryptionService.encrypt(dto.getAddress()))
                 .phone(encryptionService.encrypt(dto.getPhone()))
-                .roles(dto.getRoles())
+                .roles(dto.getRoles().stream().map(Role::valueOf).collect(Collectors.toSet()))
                 .createdAt(dto.getId() == null ? LocalDate.now() : null)
                 .deleted(dto.isDeleted())
                 .build();

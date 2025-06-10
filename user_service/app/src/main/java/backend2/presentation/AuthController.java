@@ -47,4 +47,18 @@ public class AuthController {
             .header(HttpHeaders.SET_COOKIE, cookie.toString())
             .body(Map.of("token", jwt));
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        ResponseCookie cookie = ResponseCookie.from("jwt", "")
+            .httpOnly(true)
+            .secure(false) // or true if using HTTPS
+            .path("/")
+            .sameSite("Lax")
+            .maxAge(0)
+            .build();
+        return ResponseEntity.ok()
+            .header(HttpHeaders.SET_COOKIE, cookie.toString())
+            .body("Logged out");
+    }
 } 

@@ -33,7 +33,7 @@ public class UserDTO {
     private String phone;
 
     @NotNull
-    private Set<Role> roles;
+    private Set<String> roles;
 
     private boolean deleted;
 }

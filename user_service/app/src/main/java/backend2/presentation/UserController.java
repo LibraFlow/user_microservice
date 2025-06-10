@@ -30,6 +30,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import java.util.Map;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.HttpHeaders;
+import java.util.stream.Collectors;
+import backend2.domain.Role;
 
 @RestController
 @RequestMapping("api/v1/users")
@@ -108,5 +110,15 @@ public class UserController {
             return ResponseEntity.status(403).build();
         }
         return ResponseEntity.ok(getUserDataPortabilityUseCase.getUserData(id));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body("Unauthorized or token expired");
+        }
+        String username = authentication.getName();
+        UserDTO user = getUserUseCase.getUserByUsernameIfNotDeleted(username);
+        return ResponseEntity.ok(user);
     }
 }
