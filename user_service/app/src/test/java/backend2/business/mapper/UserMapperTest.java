@@ -88,7 +88,10 @@ class UserMapperTest {
         assertEquals(testUserEntity.getEmail(), result.getEmail());
         assertEquals(testUserEntity.getAddress(), result.getAddress());
         assertEquals(testUserEntity.getPhone(), result.getPhone());
-        assertEquals(testUserEntity.getRoles(), result.getRoles());
+        // Compare roles as strings
+        Set<String> expectedRoles = new HashSet<>();
+        for (Role r : testUserEntity.getRoles()) expectedRoles.add(r.name());
+        assertEquals(expectedRoles, result.getRoles());
     }
 
     @Test
@@ -113,7 +116,11 @@ class UserMapperTest {
         assertEquals(testUserDTO.getEmail(), result.getEmail());
         assertEquals(testUserDTO.getAddress(), result.getAddress());
         assertEquals(testUserDTO.getPhone(), result.getPhone());
-        assertEquals(testUserDTO.getRoles(), result.getRoles());
+        // Compare roles as enums
+        Set<String> expectedRoles = testUserDTO.getRoles();
+        Set<String> actualRoles = new HashSet<>();
+        for (Role r : result.getRoles()) actualRoles.add(r.name());
+        assertEquals(expectedRoles, actualRoles);
         assertNull(result.getCreatedAt()); // Existing user should not have createdAt set
     }
 
