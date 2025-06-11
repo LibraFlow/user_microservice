@@ -4,11 +4,14 @@ stages:
 - security_testing
 - test
 - deploy-kubernetes
+- static_analysis
+- build-docker-image
+- docker_build
 
 variables:
   # GIT_STRATEGY: clone
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
-  DOCKER_IMAGE: ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/user-service/user-service:${CI_COMMIT_SHA}
+  DOCKER_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
   # Add NVD API key for better dependency check results
   NVD_API_KEY: ${NVD_API_KEY}
   KUBE_NAMESPACE: user-service
@@ -34,7 +37,7 @@ cache:
   - user_service/app/dependency-check-data
 
 static_analysis:
-  stage: security_testing
+  stage: static_analysis
   image: gradle:jdk17
   script:
     - cd user_service
@@ -216,13 +219,12 @@ deploy-kubernetes:
     - main
 
 docker_build:
-  stage: build
+  stage: docker_build
   script:
     - docker build -t $DOCKER_IMAGE ./user_service
     - docker push $DOCKER_IMAGE
-  artifacts:
-    # Optionally save the image as a tar file if you want to pass it as an artifact
-    # - docker save -o user-service-image.tar $DOCKER_IMAGE
+  only:
+    - main
 
 container_scan:
   stage: security_testing_1
@@ -243,13 +245,14 @@ container_scan:
     - docker_build
 
 build-docker-image:
-  stage: build
+  stage: build-docker-image
   image: docker:latest
   services:
     - docker:dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
-    - docker build -t registry.gitlab.com/$CI_PROJECT_PATH:latest ./user_service
-    - docker push registry.gitlab.com/$CI_PROJECT_PATH:latest
+    - docker build -t $DOCKER_IMAGE ./user_service
+    - docker push $DOCKER_IMAGE
   only:
     - main
