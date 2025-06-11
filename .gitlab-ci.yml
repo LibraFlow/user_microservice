@@ -1,15 +1,14 @@
 stages:
-  - static_analysis
-  - build
-  - test
-  - security_testing
-  - build-docker-image
-  - deploy-kubernetes
+- build
+- security_testing_1
+- security_testing
+- test
+- deploy-kubernetes
 
 variables:
   # GIT_STRATEGY: clone
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
-  DOCKER_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+  DOCKER_IMAGE: ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/user-service/user-service:${CI_COMMIT_SHA}
   # Add NVD API key for better dependency check results
   NVD_API_KEY: ${NVD_API_KEY}
   KUBE_NAMESPACE: user-service
@@ -35,7 +34,7 @@ cache:
   - user_service/app/dependency-check-data
 
 static_analysis:
-  stage: static_analysis
+  stage: security_testing
   image: gradle:jdk17
   script:
     - cd user_service
@@ -175,10 +174,10 @@ test:
   stage: test
   image: gradle:jdk17
   script:
-    - cd user_service
-    - gradle test
+  - cd user_service
+  - gradle test
   dependencies:
-    - build
+  - build
 
 deploy-kubernetes:
   stage: deploy-kubernetes
@@ -216,6 +215,15 @@ deploy-kubernetes:
   only:
     - main
 
+docker_build:
+  stage: build
+  script:
+    - docker build -t $DOCKER_IMAGE ./user_service
+    - docker push $DOCKER_IMAGE
+  artifacts:
+    # Optionally save the image as a tar file if you want to pass it as an artifact
+    # - docker save -o user-service-image.tar $DOCKER_IMAGE
+
 container_scan:
   stage: security_testing_1
   script:
@@ -232,17 +240,16 @@ container_scan:
     when: always
   allow_failure: true
   dependencies:
-    - build-docker-image
+    - docker_build
 
 build-docker-image:
-  stage: build-docker-image
+  stage: build
   image: docker:latest
   services:
     - docker:dind
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker build -t $DOCKER_IMAGE ./user_service
-    - docker push $DOCKER_IMAGE
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+    - docker build -t registry.gitlab.com/$CI_PROJECT_PATH:latest ./user_service
+    - docker push registry.gitlab.com/$CI_PROJECT_PATH:latest
   only:
     - main
