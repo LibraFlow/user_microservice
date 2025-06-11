@@ -224,31 +224,20 @@ deploy-kubernetes:
 #     # Optionally save the image as a tar file if you want to pass it as an artifact
 #     # - docker save -o user-service-image.tar $DOCKER_IMAGE
 
-container_scan:
-  stage: security_testing_1
-  script:
-    - mkdir -p trivy-tools
-    - cd trivy-tools
-    - Invoke-WebRequest -Uri "https://github.com/aquasecurity/trivy/releases/download/v0.51.2/trivy_0.51.2_Windows-64bit.zip" -OutFile "trivy.zip"
-    - Expand-Archive -Path "trivy.zip" -DestinationPath "." -Force
-    - cd ..
-    - docker pull $DOCKER_IMAGE
-    - .\trivy-tools\trivy.exe image --format json --output trivy-report.json $DOCKER_IMAGE
-  artifacts:
-    paths:
-      - trivy-report.json
-    when: always
-  allow_failure: true
-  dependencies:
-    - docker_build
-# build-docker-image:
-#   stage: build
-#   image: docker:latest
-#   services:
-#     - docker:dind
+# container_scan:
+#   stage: security_testing_1
 #   script:
-#     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
-#     - docker build -t registry.gitlab.com/$CI_PROJECT_PATH:latest ./user_service
-#     - docker push registry.gitlab.com/$CI_PROJECT_PATH:latest
-#   only:
-#     - main
+#     - mkdir -p trivy-tools
+#     - cd trivy-tools
+#     - Invoke-WebRequest -Uri "https://github.com/aquasecurity/trivy/releases/download/v0.51.2/trivy_0.51.2_Windows-64bit.zip" -OutFile "trivy.zip"
+#     - Expand-Archive -Path "trivy.zip" -DestinationPath "." -Force
+#     - cd ..
+#     - docker pull $DOCKER_IMAGE
+#     - .\trivy-tools\trivy.exe image --format json --output trivy-report.json $DOCKER_IMAGE
+#   artifacts:
+#     paths:
+#       - trivy-report.json
+#     when: always
+#   allow_failure: true
+#   dependencies:
+#     - docker_build
