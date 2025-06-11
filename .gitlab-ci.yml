@@ -175,10 +175,10 @@ test:
   stage: test
   image: gradle:jdk17
   script:
-  - cd user_service
-  - gradle test
+    - cd user_service
+    - gradle test
   dependencies:
-  - build
+    - build
 
 deploy-kubernetes:
   stage: deploy-kubernetes
