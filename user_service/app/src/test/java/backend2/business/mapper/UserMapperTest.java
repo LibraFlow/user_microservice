@@ -15,6 +15,7 @@ import org.mockito.quality.Strictness;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -33,7 +34,7 @@ class UserMapperTest {
 
     private UserEntity testUserEntity;
     private UserDTO testUserDTO;
-    private Set<Role> testRoles;
+    private Set<String> testRoles;
 
     @BeforeEach
     void setUp() {
@@ -47,8 +48,8 @@ class UserMapperTest {
 
         // Initialize test roles
         testRoles = new HashSet<>();
-        testRoles.add(Role.CUSTOMER);
-        testRoles.add(Role.LIBRARIAN);
+        testRoles.add("CUSTOMER");
+        testRoles.add("LIBRARIAN");
 
         // Initialize test data for UserEntity
         testUserEntity = UserEntity.builder()
@@ -58,7 +59,7 @@ class UserMapperTest {
                 .email("test@example.com")
                 .address("123 Test St")
                 .phone("+1234567890")
-                .roles(testRoles)
+                .roles(new HashSet<>(Arrays.asList(Role.CUSTOMER, Role.LIBRARIAN)))
                 .createdAt(LocalDate.now())
                 .build();
 

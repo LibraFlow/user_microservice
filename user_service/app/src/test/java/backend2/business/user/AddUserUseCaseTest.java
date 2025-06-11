@@ -37,13 +37,15 @@ class RegisterUserUseCaseTest {
     private UserDTO testUserDTO;
     private UserEntity testUserEntity;
     private UserEntity savedUserEntity;
-    private Set<Role> testRoles;
+    private Set<String> testRolesString;
 
     @BeforeEach
     void setUp() {
         // Initialize test roles
-        testRoles = new HashSet<>();
+        Set<Role> testRoles = new HashSet<>();
         testRoles.add(Role.CUSTOMER);
+        testRolesString = new HashSet<>();
+        testRolesString.add("CUSTOMER");
         
         // Initialize test data
         testUserDTO = UserDTO.builder()
@@ -53,7 +55,7 @@ class RegisterUserUseCaseTest {
                 .email("test@example.com")
                 .address("123 Test St")
                 .phone("+1234567890")
-                .roles(testRoles)
+                .roles(testRolesString)
                 .build();
 
         testUserEntity = UserEntity.builder()

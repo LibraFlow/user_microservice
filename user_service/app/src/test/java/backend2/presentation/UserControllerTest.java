@@ -53,7 +53,7 @@ public class UserControllerTest {
     private UserController userController;
 
     private UserDTO testUserDTO;
-    private Set<Role> testRoles;
+    private Set<String> testRoles;
     private Authentication authentication;
     private SecurityContext securityContext;
     private Jwt jwt;
@@ -62,7 +62,7 @@ public class UserControllerTest {
     void setUp() {
         // Initialize test roles
         testRoles = new HashSet<>();
-        testRoles.add(Role.CUSTOMER);
+        testRoles.add("CUSTOMER");
         
         testUserDTO = UserDTO.builder()
                 .id(1)

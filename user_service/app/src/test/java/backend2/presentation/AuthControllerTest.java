@@ -33,14 +33,14 @@ public class AuthControllerTest {
     private AuthController authController;
 
     private UserDTO testUserDTO;
-    private Set<backend2.domain.Role> testRoles;
+    private Set<String> testRoles;
     private String testJwtToken;
     private ResponseCookie testCookie;
 
     @BeforeEach
     void setUp() {
         testRoles = new HashSet<>();
-        testRoles.add(backend2.domain.Role.CUSTOMER);
+        testRoles.add("CUSTOMER");
         testUserDTO = UserDTO.builder()
                 .id(1)
                 .username("testuser")

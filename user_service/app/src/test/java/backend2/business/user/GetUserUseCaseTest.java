@@ -35,6 +35,7 @@ class GetUserUseCaseTest {
     private UserEntity testUserEntity;
     private UserDTO testUserDTO;
     private Set<Role> testRoles;
+    private Set<String> testRolesString;
     private Integer testUserId;
 
     @BeforeEach
@@ -42,6 +43,8 @@ class GetUserUseCaseTest {
         // Initialize test roles
         testRoles = new HashSet<>();
         testRoles.add(Role.CUSTOMER);
+        testRolesString = new HashSet<>();
+        testRolesString.add("CUSTOMER");
         
         // Initialize test user ID
         testUserId = 1;
@@ -66,7 +69,7 @@ class GetUserUseCaseTest {
                 .email("test@example.com")
                 .address("123 Test St")
                 .phone("+1234567890")
-                .roles(testRoles)
+                .roles(testRolesString)
                 .build();
     }
 

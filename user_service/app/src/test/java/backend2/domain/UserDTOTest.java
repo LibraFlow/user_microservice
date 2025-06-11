@@ -11,8 +11,8 @@ class UserDTOTest {
     @Test
     void testUserDTOBuilder() {
         // Arrange & Act
-        Set<Role> roles = new HashSet<>();
-        roles.add(Role.CUSTOMER);
+        Set<String> roles = new HashSet<>();
+        roles.add("CUSTOMER");
         
         UserDTO userDTO = UserDTO.builder()
                 .id(1)
@@ -38,8 +38,8 @@ class UserDTOTest {
     @Test
     void testUserDTOAllArgsConstructor() {
         // Arrange & Act
-        Set<Role> roles = new HashSet<>();
-        roles.add(Role.LIBRARIAN);
+        Set<String> roles = new HashSet<>();
+        roles.add("LIBRARIAN");
         
         UserDTO userDTO = new UserDTO(1, "testuser", "password123", 
                 "test@example.com", "123 Test St", "123-456-7890", roles, false);
@@ -58,14 +58,14 @@ class UserDTOTest {
     @Test
     void testUserDTOEqualsAndHashCode() {
         // Arrange
-        Set<Role> roles1 = new HashSet<>();
-        roles1.add(Role.CUSTOMER);
+        Set<String> roles1 = new HashSet<>();
+        roles1.add("CUSTOMER");
         
-        Set<Role> roles2 = new HashSet<>();
-        roles2.add(Role.CUSTOMER);
+        Set<String> roles2 = new HashSet<>();
+        roles2.add("CUSTOMER");
         
-        Set<Role> roles3 = new HashSet<>();
-        roles3.add(Role.ADMINISTRATOR);
+        Set<String> roles3 = new HashSet<>();
+        roles3.add("ADMINISTRATOR");
 
         UserDTO userDTO1 = UserDTO.builder()
                 .id(1)
@@ -107,8 +107,8 @@ class UserDTOTest {
     @Test
     void testUserDTOToString() {
         // Arrange
-        Set<Role> roles = new HashSet<>();
-        roles.add(Role.CUSTOMER);
+        Set<String> roles = new HashSet<>();
+        roles.add("CUSTOMER");
         
         UserDTO userDTO = UserDTO.builder()
                 .id(1)
@@ -137,8 +137,8 @@ class UserDTOTest {
     void testUserDTOSettersAndGetters() {
         // Arrange
         UserDTO userDTO = new UserDTO();
-        Set<Role> roles = new HashSet<>();
-        roles.add(Role.ADMINISTRATOR);
+        Set<String> roles = new HashSet<>();
+        roles.add("ADMINISTRATOR");
         
         // Act
         userDTO.setId(1);

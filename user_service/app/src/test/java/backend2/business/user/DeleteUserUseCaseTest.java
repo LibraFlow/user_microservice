@@ -42,12 +42,15 @@ class RightToBeForgottenUseCaseTest {
     private UserDTO testUserDTO;
     private Integer testUserId;
     private Set<Role> testRoles;
+    private Set<String> testRolesString;
 
     @BeforeEach
     void setUp() {
         testUserId = 1;
         testRoles = new HashSet<>();
         testRoles.add(Role.CUSTOMER);
+        testRolesString = new HashSet<>();
+        testRolesString.add("CUSTOMER");
         
         testUserEntity = UserEntity.builder()
                 .id(testUserId)
@@ -66,7 +69,7 @@ class RightToBeForgottenUseCaseTest {
                 .email("test@example.com")
                 .address("123 Test St")
                 .phone("+1234567890")
-                .roles(testRoles)
+                .roles(testRolesString)
                 .build();
     }
 

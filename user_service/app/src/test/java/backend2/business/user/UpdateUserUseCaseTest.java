@@ -37,6 +37,7 @@ class UpdateUserUseCaseTest {
     private UserEntity updatedUserEntity;
     private UserDTO updatedUserDTO;
     private Set<Role> testRoles;
+    private Set<String> testRolesString;
     private Integer testUserId;
     private LocalDate testCreatedAt;
 
@@ -45,6 +46,8 @@ class UpdateUserUseCaseTest {
         // Initialize test roles
         testRoles = new HashSet<>();
         testRoles.add(Role.CUSTOMER);
+        testRolesString = new HashSet<>();
+        testRolesString.add("CUSTOMER");
         
         // Initialize test user ID
         testUserId = 1;
@@ -84,7 +87,7 @@ class UpdateUserUseCaseTest {
                 .email("new@example.com")
                 .address("456 New St")
                 .phone("+0987654321")
-                .roles(testRoles)
+                .roles(testRolesString)
                 .build();
     }
 
