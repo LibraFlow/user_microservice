@@ -1,12 +1,10 @@
 stages:
-- build
-- security_testing_1
-- security_testing
-- test
-- deploy-kubernetes
-- static_analysis
-- build-docker-image
-- docker_build
+  - static_analysis
+  - build
+  - test
+  - security_testing
+  - build-docker-image
+  - deploy-kubernetes
 
 variables:
   # GIT_STRATEGY: clone
@@ -218,14 +216,6 @@ deploy-kubernetes:
   only:
     - main
 
-docker_build:
-  stage: docker_build
-  script:
-    - docker build -t $DOCKER_IMAGE ./user_service
-    - docker push $DOCKER_IMAGE
-  only:
-    - main
-
 container_scan:
   stage: security_testing_1
   script:
@@ -242,7 +232,7 @@ container_scan:
     when: always
   allow_failure: true
   dependencies:
-    - docker_build
+    - build-docker-image
 
 build-docker-image:
   stage: build-docker-image
