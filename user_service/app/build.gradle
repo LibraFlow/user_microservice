@@ -58,6 +58,24 @@ dependencies {
     // Spring Security
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+
+    // Test dependencies
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'com.h2database:h2'
+    testImplementation 'org.assertj:assertj-core'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine'
+    testImplementation 'org.mockito:mockito-core'
+    testImplementation 'org.mockito:mockito-junit-jupiter'
+    
+    // TestContainers
+    testImplementation 'org.testcontainers:testcontainers:1.19.3'
+    testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
+    testImplementation 'org.testcontainers:postgresql:1.19.3'
+    
+    // Database
+    testImplementation 'org.postgresql:postgresql'
+    testImplementation 'com.h2database:h2'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -104,3 +122,35 @@ dependencyCheck {
     }
     autoUpdate = true
 }
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        showExceptions true
+        showCauses true
+        showStackTraces true
+    }
+    // Enable TestContainers
+    systemProperty "testcontainers.reuse.enable", "true"
+}
+
+// Add a specific task for integration tests
+task integrationTest(type: Test) {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        showExceptions true
+        showCauses true
+        showStackTraces true
+    }
+    // Only run tests that end with 'IntegrationTest'
+    include '**/*IntegrationTest.class'
+    // Make sure this task runs after the main test task
+    dependsOn test
+    // Enable TestContainers
+    systemProperty "testcontainers.reuse.enable", "true"
+}
+
+// Make sure integration tests run as part of the check task
+check.dependsOn integrationTest
