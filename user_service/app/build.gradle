@@ -46,6 +46,9 @@ dependencies {
     testImplementation 'org.mockito:mockito-junit-jupiter:5.10.0'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    
+    // Spring Security Test
+    testImplementation 'org.springframework.security:spring-security-test'
 
     // This dependency is used by the application.
     implementation libs.guava
