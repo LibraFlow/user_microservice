@@ -79,8 +79,6 @@ build:
   artifacts:
     paths:
       - user_service/app/build/libs/*.jar
-  dependencies:
-    - setup_database
 
 dependency_check:
   stage: security_testing1
