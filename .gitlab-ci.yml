@@ -173,11 +173,18 @@ zap_scan:
 test:
   stage: test
   image: gradle:jdk17
+  variables:
+    SPRING_PROFILES_ACTIVE: test
+    SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    SPRING_DATASOURCE_DRIVERCLASSNAME: org.h2.Driver
+    SPRING_DATASOURCE_USERNAME: sa
+    SPRING_DATASOURCE_PASSWORD: 
+    SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.H2Dialect
   script:
-  - cd user_service
-  - gradle test
+    - cd user_service
+    - gradle test
   dependencies:
-  - build
+    - build
 
 deploy-kubernetes:
   stage: deploy-kubernetes
@@ -214,30 +221,3 @@ deploy-kubernetes:
     - build
   only:
     - main
-
-# docker_build:
-#   stage: build
-#   script:
-#     - docker build -t $DOCKER_IMAGE ./user_service
-#     - docker push $DOCKER_IMAGE
-#   artifacts:
-#     # Optionally save the image as a tar file if you want to pass it as an artifact
-#     # - docker save -o user-service-image.tar $DOCKER_IMAGE
-
-# container_scan:
-#   stage: security_testing_1
-#   script:
-#     - mkdir -p trivy-tools
-#     - cd trivy-tools
-#     - Invoke-WebRequest -Uri "https://github.com/aquasecurity/trivy/releases/download/v0.51.2/trivy_0.51.2_Windows-64bit.zip" -OutFile "trivy.zip"
-#     - Expand-Archive -Path "trivy.zip" -DestinationPath "." -Force
-#     - cd ..
-#     - docker pull $DOCKER_IMAGE
-#     - .\trivy-tools\trivy.exe image --format json --output trivy-report.json $DOCKER_IMAGE
-#   artifacts:
-#     paths:
-#       - trivy-report.json
-#     when: always
-#   allow_failure: true
-#   dependencies:
-#     - docker_build
