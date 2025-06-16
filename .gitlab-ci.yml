@@ -1,7 +1,7 @@
 stages:
+- security_testing1
 - build
 - security_testing2
-- security_testing1
 - test
 - deploy-kubernetes
 
