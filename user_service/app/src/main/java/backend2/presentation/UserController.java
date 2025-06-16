@@ -121,4 +121,28 @@ public class UserController {
         UserDTO user = getUserUseCase.getUserByUsernameIfNotDeleted(username);
         return ResponseEntity.ok(user);
     }
+
+    @GetMapping("/deleted")
+    public ResponseEntity<List<UserDTO>> getAllDeletedUsers() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdminOrLibrarian = authentication.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .anyMatch(role -> role.equals("ROLE_ADMINISTRATOR") || role.equals("ROLE_LIBRARIAN"));
+        if (!isAdminOrLibrarian) {
+            return ResponseEntity.status(403).build();
+        }
+        return ResponseEntity.ok(getAllUsersUseCase.getAllDeletedUsers());
+    }
+
+    @GetMapping("/regardless/{id}")
+    public ResponseEntity<UserDTO> getUserRegardlessOfDeleted(@PathVariable Integer id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdminOrLibrarian = authentication.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .anyMatch(role -> role.equals("ROLE_ADMINISTRATOR") || role.equals("ROLE_LIBRARIAN"));
+        if (!isAdminOrLibrarian) {
+            return ResponseEntity.status(403).build();
+        }
+        return ResponseEntity.ok(getAllUsersUseCase.getUserByIdRegardlessOfDeleted(id));
+    }
 }

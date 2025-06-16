@@ -79,6 +79,10 @@ dependencies {
     // Database
     testImplementation 'org.postgresql:postgresql'
     testImplementation 'com.h2database:h2'
+
+    // Kafka dependencies
+    implementation 'org.springframework.kafka:spring-kafka'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

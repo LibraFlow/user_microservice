@@ -25,4 +25,17 @@ public class GetAllUsersUseCase {
                 .map(userMapper::toDTO)
                 .collect(Collectors.toList());
     }
+
+    public List<UserDTO> getAllDeletedUsers() {
+        return userRepository.findByDeletedTrue()
+                .stream()
+                .map(userMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    public UserDTO getUserByIdRegardlessOfDeleted(Integer id) {
+        return userRepository.findById(id)
+                .map(userMapper::toDTO)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+    }
 }
