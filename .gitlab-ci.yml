@@ -1,5 +1,5 @@
 stages:
-- setup_database
+# - setup_database
 - build
 - security_testing1
 - security_testing2
@@ -200,15 +200,24 @@ zap_scan:
 test:
   stage: test
   image: gradle:jdk17
+  services:
+    - name: postgres:latest
+      alias: postgres
   variables:
+    POSTGRES_DB: $SPRING_DATASOURCE_DATABASE
+    POSTGRES_USER: $SPRING_DATASOURCE_USERNAME
+    POSTGRES_PASSWORD: $SPRING_DATASOURCE_PASSWORD
     SPRING_PROFILES_ACTIVE: test
+    SPRING_DATASOURCE_URL: $SPRING_DATASOURCE_URL
+    SPRING_DATASOURCE_USERNAME: $SPRING_DATASOURCE_USERNAME
+    SPRING_DATASOURCE_PASSWORD: $SPRING_DATASOURCE_PASSWORD
+    SPRING_DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
+    SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
   script:
     - cd user_service
-    - echo "Starting tests with H2 database..."
     - gradle test -Dspring.profiles.active=test
   dependencies:
     - build
-    - setup_database
 
 deploy-kubernetes:
   stage: deploy-kubernetes
