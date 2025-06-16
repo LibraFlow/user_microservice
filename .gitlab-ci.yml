@@ -1,5 +1,5 @@
 stages:
-# - setup_database
+#- setup_database
 - build
 - security_testing1
 - security_testing2
@@ -71,19 +71,19 @@ static_analysis:
       - user_service/app/build/reports/spotbugs/
   allow_failure: true  # Allow the stage to fail without stopping the pipeline
 
-# Add database setup stage
-setup_database:
-  stage: setup_database
-  image: gradle:jdk17
-  script:
-    - cd user_service
-    - echo "Verifying H2 database configuration..."
-    - gradle testClasses
-    - echo "H2 database configuration verified"
-  artifacts:
-    paths:
-      - user_service/app/build/classes/java/test
-    expire_in: 1 hour
+# Comment out the database setup stage
+#setup_database:
+#  stage: setup_database
+#  image: gradle:jdk17
+#  script:
+#    - cd user_service
+#    - echo "Verifying H2 database configuration..."
+#    - gradle testClasses
+#    - echo "H2 database configuration verified"
+#  artifacts:
+#    paths:
+#      - user_service/app/build/classes/java/test
+#    expire_in: 1 hour
 
 build:
   stage: build
