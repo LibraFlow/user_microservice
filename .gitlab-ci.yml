@@ -175,14 +175,18 @@ test:
   image: gradle:jdk17
   variables:
     SPRING_PROFILES_ACTIVE: test
+    # Override database configuration for tests
     SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
     SPRING_DATASOURCE_DRIVERCLASSNAME: org.h2.Driver
     SPRING_DATASOURCE_USERNAME: sa
     SPRING_DATASOURCE_PASSWORD: 
     SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.H2Dialect
+    # Disable cloud platform for tests
+    SPRING_CLOUD_GCP_SQL_ENABLED: false
+    SPRING_MAIN_CLOUD_PLATFORM: none
   script:
     - cd user_service
-    - gradle test
+    - gradle test -Dspring.profiles.active=test
   dependencies:
     - build
 
