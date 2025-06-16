@@ -1,7 +1,7 @@
 stages:
 - build
-- security_testing_1
-- security_testing
+- security_testing2
+- security_testing1
 - test
 - deploy-kubernetes
 
@@ -34,7 +34,7 @@ cache:
   - user_service/app/dependency-check-data
 
 static_analysis:
-  stage: security_testing
+  stage: security_testing1
   image: gradle:jdk17
   script:
     - cd user_service
@@ -71,7 +71,7 @@ build:
       - user_service/app/build/libs/*.jar
 
 dependency_check:
-  stage: security_testing
+  stage: security_testing1
   dependencies:
     - build
   script:
@@ -90,7 +90,7 @@ dependency_check:
   allow_failure: true
 
 zap_scan:
-  stage: security_testing_1
+  stage: security_testing2
   script:
     # Clean up any previous runs
     - Write-Host "Cleaning up old containers and network..."
