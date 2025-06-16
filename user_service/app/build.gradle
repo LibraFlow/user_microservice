@@ -83,6 +83,8 @@ dependencies {
     // Kafka dependencies
     implementation 'org.springframework.kafka:spring-kafka'
     testImplementation 'org.springframework.kafka:spring-kafka-test'
+
+    testRuntimeOnly 'com.h2database:h2'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
