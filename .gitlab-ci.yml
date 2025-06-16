@@ -1,4 +1,5 @@
 stages:
+- setup_database
 - build
 - security_testing1
 - security_testing2
@@ -19,9 +20,19 @@ variables:
   CONTAINER_ID: ${CI_PIPELINE_ID}
   # Add test port
   TEST_PORT: 8088
-  SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
-  SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
-  SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+  # Test database configuration
+  SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+  SPRING_DATASOURCE_DRIVERCLASSNAME: org.h2.Driver
+  SPRING_DATASOURCE_USERNAME: sa
+  SPRING_DATASOURCE_PASSWORD: 
+  SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.H2Dialect
+  # Disable cloud platform for tests
+  SPRING_CLOUD_GCP_SQL_ENABLED: false
+  SPRING_MAIN_CLOUD_PLATFORM: none
+  # Keep production database variables
+  PROD_SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+  PROD_SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+  PROD_SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
   JWT_SECRET: ${JWT_SECRET}
   ENCRYPTION_KEY: ${ENCRYPTION_KEY}
   KEYPART_ONE: ${KEYPART_ONE}
@@ -60,6 +71,20 @@ static_analysis:
       - user_service/app/build/reports/spotbugs/
   allow_failure: true  # Allow the stage to fail without stopping the pipeline
 
+# Add database setup stage
+setup_database:
+  stage: setup_database
+  image: gradle:jdk17
+  script:
+    - cd user_service
+    - echo "Verifying H2 database configuration..."
+    - gradle testClasses
+    - echo "H2 database configuration verified"
+  artifacts:
+    paths:
+      - user_service/app/build/classes/java/test
+    expire_in: 1 hour
+
 build:
   stage: build
   image: gradle:jdk17
@@ -69,6 +94,8 @@ build:
   artifacts:
     paths:
       - user_service/app/build/libs/*.jar
+  dependencies:
+    - setup_database
 
 dependency_check:
   stage: security_testing1
@@ -175,20 +202,13 @@ test:
   image: gradle:jdk17
   variables:
     SPRING_PROFILES_ACTIVE: test
-    # Override database configuration for tests
-    SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
-    SPRING_DATASOURCE_DRIVERCLASSNAME: org.h2.Driver
-    SPRING_DATASOURCE_USERNAME: sa
-    SPRING_DATASOURCE_PASSWORD: 
-    SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.H2Dialect
-    # Disable cloud platform for tests
-    SPRING_CLOUD_GCP_SQL_ENABLED: false
-    SPRING_MAIN_CLOUD_PLATFORM: none
   script:
     - cd user_service
+    - echo "Starting tests with H2 database..."
     - gradle test -Dspring.profiles.active=test
   dependencies:
     - build
+    - setup_database
 
 deploy-kubernetes:
   stage: deploy-kubernetes
