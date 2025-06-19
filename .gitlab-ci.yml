@@ -228,3 +228,4 @@ deploy-kubernetes:
     - kubectl apply -f ./user_service/kubernetes/service.yaml -n $KUBE_NAMESPACE
   only:
     - main
+    
