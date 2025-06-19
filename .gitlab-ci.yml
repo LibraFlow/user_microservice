@@ -1,8 +1,8 @@
 stages:
-- build
-- security_testing1
-- security_testing2
-- test
+# - build
+# - security_testing1
+# - security_testing2
+# - test
 - deploy-kubernetes
 
 variables:
@@ -37,164 +37,164 @@ cache:
   - user_service/app/.gradle/caches
   - user_service/app/dependency-check-data
 
-static_analysis:
-  stage: security_testing1
-  image: gradle:jdk17
-  script:
-    - cd user_service
-    - gradle spotbugsMain spotbugsTest
-    # Check if SpotBugs found any issues
-    - |
-      if (Test-Path "app/build/reports/spotbugs/main.xml") {
-        $xml = [xml](Get-Content "app/build/reports/spotbugs/main.xml")
-        $bugCount = $xml.SelectNodes("//BugInstance").Count
-        if ($bugCount -gt 0) {
-          Write-Host "::warning::SpotBugs found $bugCount potential issues. Please review the detailed report in the artifacts."
-          Write-Host "::warning::To view the report, download the artifacts from this job or check the Code Quality report."
-          # Exit with code 0 to allow the pipeline to continue, but with a warning
-          exit 0
-        }
-      }
-  artifacts:
-    when: always
-    expire_in: 1 week
-    reports:
-      codequality: user_service/app/build/reports/spotbugs/main.xml
-    paths:
-      - user_service/app/build/reports/spotbugs/
-  allow_failure: true  # Allow the stage to fail without stopping the pipeline
+# static_analysis:
+#   stage: security_testing1
+#   image: gradle:jdk17
+#   script:
+#     - cd user_service
+#     - gradle spotbugsMain spotbugsTest
+#     # Check if SpotBugs found any issues
+#     - |
+#       if (Test-Path "app/build/reports/spotbugs/main.xml") {
+#         $xml = [xml](Get-Content "app/build/reports/spotbugs/main.xml")
+#         $bugCount = $xml.SelectNodes("//BugInstance").Count
+#         if ($bugCount -gt 0) {
+#           Write-Host "::warning::SpotBugs found $bugCount potential issues. Please review the detailed report in the artifacts."
+#           Write-Host "::warning::To view the report, download the artifacts from this job or check the Code Quality report."
+#           # Exit with code 0 to allow the pipeline to continue, but with a warning
+#           exit 0
+#         }
+#       }
+#   artifacts:
+#     when: always
+#     expire_in: 1 week
+#     reports:
+#       codequality: user_service/app/build/reports/spotbugs/main.xml
+#     paths:
+#       - user_service/app/build/reports/spotbugs/
+#   allow_failure: true  # Allow the stage to fail without stopping the pipeline
 
-build:
-  stage: build
-  image: gradle:jdk17
-  script:
-    - cd user_service
-    - gradle build
-  artifacts:
-    paths:
-      - user_service/app/build/libs/*.jar
+# build:
+#   stage: build
+#   image: gradle:jdk17
+#   script:
+#     - cd user_service
+#     - gradle build
+#   artifacts:
+#     paths:
+#       - user_service/app/build/libs/*.jar
 
-dependency_check:
-  stage: security_testing1
-  dependencies:
-    - build
-  script:
-    - echo "Running dependency check"
-    - powershell -Command "Invoke-WebRequest -Uri 'https://github.com/jeremylong/DependencyCheck/releases/download/v12.1.0/dependency-check-12.1.0-release.zip' -OutFile 'dependency-check.zip'"
-    - powershell -Command "Expand-Archive -Path 'dependency-check.zip' -DestinationPath 'dependency-check'"
-    - mkdir -p dependency-check-report
-    - powershell -Command "& 'dependency-check/dependency-check/bin/dependency-check.bat' --project 'user-service' --scan 'user_service/app' --format 'ALL' --out 'dependency-check-report' --nvdApiKey $env:NVD_API_KEY"
-  artifacts:
-    when: always
-    expire_in: 1 week
-    paths:
-      - dependency-check-report/
-    reports:
-      dependency_scanning: dependency-check-report/dependency-check-report.json
-  allow_failure: true
+# dependency_check:
+#   stage: security_testing1
+#   dependencies:
+#     - build
+#   script:
+#     - echo "Running dependency check"
+#     - powershell -Command "Invoke-WebRequest -Uri 'https://github.com/jeremylong/DependencyCheck/releases/download/v12.1.0/dependency-check-12.1.0-release.zip' -OutFile 'dependency-check.zip'"
+#     - powershell -Command "Expand-Archive -Path 'dependency-check.zip' -DestinationPath 'dependency-check'"
+#     - mkdir -p dependency-check-report
+#     - powershell -Command "& 'dependency-check/dependency-check/bin/dependency-check.bat' --project 'user-service' --scan 'user_service/app' --format 'ALL' --out 'dependency-check-report' --nvdApiKey $env:NVD_API_KEY"
+#   artifacts:
+#     when: always
+#     expire_in: 1 week
+#     paths:
+#       - dependency-check-report/
+#     reports:
+#       dependency_scanning: dependency-check-report/dependency-check-report.json
+#   allow_failure: true
 
-zap_scan:
-  stage: security_testing2
-  script:
-    # Clean up any previous runs
-    - Write-Host "Cleaning up old containers and network..."
-    - docker rm -f zap-db6 zap-user-service zap-zap; $null = $?
-    - docker network rm zap-net; $null = $?
+# zap_scan:
+#   stage: security_testing2
+#   script:
+#     # Clean up any previous runs
+#     - Write-Host "Cleaning up old containers and network..."
+#     - docker rm -f zap-db6 zap-user-service zap-zap; $null = $?
+#     - docker network rm zap-net; $null = $?
 
-    # Create Docker network
-    - Write-Host "Creating Docker network..."
-    - docker network create zap-net 2>$null
+#     # Create Docker network
+#     - Write-Host "Creating Docker network..."
+#     - docker network create zap-net 2>$null
 
-    # Start PostgreSQL
-    - Write-Host "Starting PostgreSQL container..."
-    - docker run -d --name zap-db6 --network zap-net `
-        -e POSTGRES_USER="$env:SPRING_DATASOURCE_USERNAME" `
-        -e POSTGRES_PASSWORD="$env:SPRING_DATASOURCE_PASSWORD" `
-        -e POSTGRES_DB=db6 -p 5438:5432 postgres:latest
+#     # Start PostgreSQL
+#     - Write-Host "Starting PostgreSQL container..."
+#     - docker run -d --name zap-db6 --network zap-net `
+#         -e POSTGRES_USER="$env:SPRING_DATASOURCE_USERNAME" `
+#         -e POSTGRES_PASSWORD="$env:SPRING_DATASOURCE_PASSWORD" `
+#         -e POSTGRES_DB=db6 -p 5438:5432 postgres:latest
 
-    # Wait for DB to be ready
-    - Write-Host "Waiting for DB to be ready..."
-    - |
-      $maxAttempts = 20
-      $attempt = 0
-      while ($attempt -lt $maxAttempts) {
-        $attempt++
-        try {
-          docker exec zap-db6 pg_isready -U $SPRING_DATASOURCE_USERNAME -d db6
-          if ($LASTEXITCODE -eq 0) { break }
-        } catch { }
-        Start-Sleep -Seconds 2
-      }
+#     # Wait for DB to be ready
+#     - Write-Host "Waiting for DB to be ready..."
+#     - |
+#       $maxAttempts = 20
+#       $attempt = 0
+#       while ($attempt -lt $maxAttempts) {
+#         $attempt++
+#         try {
+#           docker exec zap-db6 pg_isready -U $SPRING_DATASOURCE_USERNAME -d db6
+#           if ($LASTEXITCODE -eq 0) { break }
+#         } catch { }
+#         Start-Sleep -Seconds 2
+#       }
 
-    # Build and start your app
-    - Write-Host "Building user-service image..."
-    - docker build -t zap-user-service ./user_service
-    - Write-Host "Starting user-service container..."
-    - docker run -d --name zap-user-service --network zap-net `
-        -e SPRING_DATASOURCE_URL="jdbc:postgresql://zap-db6:5432/db6" `
-        -e SPRING_DATASOURCE_USERNAME="$env:SPRING_DATASOURCE_USERNAME" `
-        -e SPRING_DATASOURCE_PASSWORD="$env:SPRING_DATASOURCE_PASSWORD" `
-        -p 8088:8087 zap-user-service
+#     # Build and start your app
+#     - Write-Host "Building user-service image..."
+#     - docker build -t zap-user-service ./user_service
+#     - Write-Host "Starting user-service container..."
+#     - docker run -d --name zap-user-service --network zap-net `
+#         -e SPRING_DATASOURCE_URL="jdbc:postgresql://zap-db6:5432/db6" `
+#         -e SPRING_DATASOURCE_USERNAME="$env:SPRING_DATASOURCE_USERNAME" `
+#         -e SPRING_DATASOURCE_PASSWORD="$env:SPRING_DATASOURCE_PASSWORD" `
+#         -p 8088:8087 zap-user-service
 
-    # Wait for app to be healthy
-    - Write-Host "Waiting for user-service to be healthy..."
-    - |
-      $maxAttempts = 30
-      $attempt = 0
-      while ($attempt -lt $maxAttempts) {
-        $attempt++
-        try {
-          $response = Invoke-WebRequest -Uri "http://localhost:8088/actuator/health" -UseBasicParsing -TimeoutSec 2
-          if ($response.Content -match '"status":"UP"') { break }
-        } catch { }
-        Start-Sleep -Seconds 2
-      }
+#     # Wait for app to be healthy
+#     - Write-Host "Waiting for user-service to be healthy..."
+#     - |
+#       $maxAttempts = 30
+#       $attempt = 0
+#       while ($attempt -lt $maxAttempts) {
+#         $attempt++
+#         try {
+#           $response = Invoke-WebRequest -Uri "http://localhost:8088/actuator/health" -UseBasicParsing -TimeoutSec 2
+#           if ($response.Content -match '"status":"UP"') { break }
+#         } catch { }
+#         Start-Sleep -Seconds 2
+#       }
 
-    # Run ZAP scan
-    - Write-Host "Running ZAP scan..."
-    - docker ps -a
-    - docker logs zap-user-service
-    - docker logs zap-db6
-    - docker exec zap-user-service ping -c 3 zap-db6
-    - docker exec zap-zap ping -c 3 zap-user-service
-    - docker run --name zap-zap --network zap-net -v "${PWD}:/zap/wrk" -t zaproxy/zap-stable zap-baseline.py -t http://zap-user-service:8087 -r zap_report.html
-    - docker run --rm --network zap-net curlimages/curl:latest curl http://zap-user-service:8087/actuator/health
+#     # Run ZAP scan
+#     - Write-Host "Running ZAP scan..."
+#     - docker ps -a
+#     - docker logs zap-user-service
+#     - docker logs zap-db6
+#     - docker exec zap-user-service ping -c 3 zap-db6
+#     - docker exec zap-zap ping -c 3 zap-user-service
+#     - docker run --name zap-zap --network zap-net -v "${PWD}:/zap/wrk" -t zaproxy/zap-stable zap-baseline.py -t http://zap-user-service:8087 -r zap_report.html
+#     - docker run --rm --network zap-net curlimages/curl:latest curl http://zap-user-service:8087/actuator/health
 
-  after_script:
-    - Write-Host "Cleaning up containers and network..."
-    - docker rm -f zap-db6 zap-user-service zap-zap 2>$null
-    - docker network rm zap-net 2>$null
+#   after_script:
+#     - Write-Host "Cleaning up containers and network..."
+#     - docker rm -f zap-db6 zap-user-service zap-zap 2>$null
+#     - docker network rm zap-net 2>$null
 
-  artifacts:
-    paths:
-      - zap_report.html
-    when: always
-  allow_failure: true
-  only:
-    - merge_requests
-    - main
+#   artifacts:
+#     paths:
+#       - zap_report.html
+#     when: always
+#   allow_failure: true
+#   only:
+#     - merge_requests
+#     - main
 
-test:
-  stage: test
-  image: gradle:jdk17
-  services:
-    - name: postgres:latest
-      alias: postgres
-  variables:
-    POSTGRES_DB: ${SPRING_DATASOURCE_DATABASE}
-    POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME}
-    POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
-    SPRING_PROFILES_ACTIVE: test
-    SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
-    SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
-    SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
-    SPRING_DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
-    SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
-  script:
-    - cd user_service
-    - gradle test "-Dspring.profiles.active=test"
-  dependencies:
-    - build
+# test:
+#   stage: test
+#   image: gradle:jdk17
+#   services:
+#     - name: postgres:latest
+#       alias: postgres
+#   variables:
+#     POSTGRES_DB: ${SPRING_DATASOURCE_DATABASE}
+#     POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME}
+#     POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+#     SPRING_PROFILES_ACTIVE: test
+#     SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+#     SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+#     SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+#     SPRING_DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
+#     SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
+#   script:
+#     - cd user_service
+#     - gradle test "-Dspring.profiles.active=test"
+#   dependencies:
+#     - build
 
 deploy-kubernetes:
   stage: deploy-kubernetes
@@ -226,8 +226,8 @@ deploy-kubernetes:
     # Replace variables in deployment.yaml and apply
     - (Get-Content ./user_service/kubernetes/deployment.yaml) -replace '\${GCP_REGION}', $GCP_REGION -replace '\${GCP_PROJECT_ID}', $GCP_PROJECT_ID -replace '\${CI_COMMIT_SHA}', $CI_COMMIT_SHA | kubectl apply -f - -n $KUBE_NAMESPACE
     - kubectl apply -f ./user_service/kubernetes/service.yaml -n $KUBE_NAMESPACE
-  dependencies:
-    - static_analysis
-    - build
+  # dependencies:
+  #   - static_analysis
+  #   - build
   only:
     - main

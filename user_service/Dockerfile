@@ -14,6 +14,8 @@ ENV SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
 ENV SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
 # ENV SPRING_DATASOURCE_DATABASE=db6
 ENV SPRING_DATASOURCE_DATABASE=${SPRING_DATASOURCE_DATABASE}
+ENV KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
+ENV KAFKA_AUTO_CONFIGURE_EXCLUDE=${KAFKA_AUTO_CONFIGURE_EXCLUDE}
 
 EXPOSE 8087
 
@@ -28,6 +30,8 @@ RUN echo '#!/bin/sh' > /app/start.sh && \
     echo 'echo "SPRING_PROFILES_ACTIVE: $SPRING_PROFILES_ACTIVE"' >> /app/start.sh && \
     echo 'echo "INSTANCE_CONNECTION_NAME: $INSTANCE_CONNECTION_NAME"' >> /app/start.sh && \
     echo 'echo "SPRING_DATASOURCE_DATABASE: $SPRING_DATASOURCE_DATABASE"' >> /app/start.sh && \
+    echo 'echo "KAFKA_BOOTSTRAP_SERVERS: $KAFKA_BOOTSTRAP_SERVERS"' >> /app/start.sh && \
+    echo 'echo "KAFKA_AUTO_CONFIGURE_EXCLUDE: $KAFKA_AUTO_CONFIGURE_EXCLUDE"' >> /app/start.sh && \
     echo 'exec java -Xmx512m -Xms256m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom -jar app.jar' >> /app/start.sh && \
     chmod +x /app/start.sh
     
