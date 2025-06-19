@@ -18,7 +18,6 @@ ENV KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
 ENV KAFKA_AUTO_CONFIGURE_EXCLUDE=${KAFKA_AUTO_CONFIGURE_EXCLUDE}
 
 EXPOSE 8080
-EXPOSE 8087
 
 # Add health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
@@ -27,7 +26,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Create startup script
 RUN echo '#!/bin/sh' > /app/start.sh && \
     echo 'echo "Starting application with environment variables:"' >> /app/start.sh && \
-    echo 'echo "PORT: $PORT (Cloud Run default is 8080, app default is 8087)"' >> /app/start.sh && \
+    echo 'echo "PORT: $PORT (Cloud Run default port 8080)"' >> /app/start.sh && \
     echo 'echo "SPRING_PROFILES_ACTIVE: $SPRING_PROFILES_ACTIVE"' >> /app/start.sh && \
     echo 'echo "INSTANCE_CONNECTION_NAME: $INSTANCE_CONNECTION_NAME"' >> /app/start.sh && \
     echo 'echo "SPRING_DATASOURCE_DATABASE: $SPRING_DATASOURCE_DATABASE"' >> /app/start.sh && \
