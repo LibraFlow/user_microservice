@@ -192,7 +192,7 @@ test:
     SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
   script:
     - cd user_service
-    - gradle test -Dspring.profiles.active=test
+    - gradle test "-Dspring.profiles.active=test"
   dependencies:
     - build
 
